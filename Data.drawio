@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Page-1" id="0iOM_f14DcGsq8RxaXaA">
-    <mxGraphModel dx="2159" dy="1364" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1508" dy="953" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -593,16 +593,26 @@
             <mxPoint x="650" y="230" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-236" connectable="0" parent="ELeolPFA8f79nLcILOrL-226" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="teaches" vertex="1">
+          <mxGeometry relative="1" x="0.7878" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-227" edge="1" parent="1" source="ELeolPFA8f79nLcILOrL-57" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;exitX=0.107;exitY=1.011;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.832;entryY=0.003;entryDx=0;entryDy=0;entryPerimeter=0;" target="ELeolPFA8f79nLcILOrL-163" value="">
-          <mxGeometry height="100" relative="1" width="100" x="0.1337" as="geometry">
+          <mxGeometry height="100" relative="1" width="100" x="0.1326" as="geometry">
             <Array as="points">
               <mxPoint x="774.3" y="320" />
-              <mxPoint x="519.8" y="320" />
-              <mxPoint x="519.8" y="340" />
+              <mxPoint x="500" y="320" />
+              <mxPoint x="500" y="340" />
               <mxPoint x="269.8" y="340" />
             </Array>
             <mxPoint x="520" y="292" as="sourcePoint" />
             <mxPoint x="250" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-237" connectable="0" parent="ELeolPFA8f79nLcILOrL-227" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="is enrolled" vertex="1">
+          <mxGeometry relative="1" x="0.7677" y="3" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-228" edge="1" parent="1" source="ELeolPFA8f79nLcILOrL-71" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.861;exitY=1.013;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
@@ -625,6 +635,11 @@
             <mxPoint x="820" y="610" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-242" connectable="0" parent="ELeolPFA8f79nLcILOrL-229" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="opens" vertex="1">
+          <mxGeometry relative="1" x="-0.4185" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-230" edge="1" parent="1" source="ELeolPFA8f79nLcILOrL-71" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;entryX=0.63;entryY=-0.004;entryDx=0;entryDy=0;exitX=0.46;exitY=1.053;exitDx=0;exitDy=0;exitPerimeter=0;entryPerimeter=0;" target="ELeolPFA8f79nLcILOrL-74" value="">
           <mxGeometry height="100" relative="1" width="100" x="-0.1706" as="geometry">
             <Array as="points">
@@ -632,6 +647,16 @@
             </Array>
             <mxPoint x="920.5" y="610" as="sourcePoint" />
             <mxPoint x="670.5" y="708" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-240" connectable="0" parent="ELeolPFA8f79nLcILOrL-230" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="has" vertex="1">
+          <mxGeometry relative="1" x="0.0913" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-241" connectable="0" parent="ELeolPFA8f79nLcILOrL-230" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="has" vertex="1">
+          <mxGeometry relative="1" x="0.0913" y="3" as="geometry">
+            <mxPoint x="164" y="-9" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-231" edge="1" parent="1" source="ELeolPFA8f79nLcILOrL-71" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;entryX=1.014;entryY=0.043;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.16;exitY=1.027;exitDx=0;exitDy=0;exitPerimeter=0;" target="ELeolPFA8f79nLcILOrL-164" value="">
@@ -645,6 +670,11 @@
             <mxPoint x="340.5" y="638" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-238" connectable="0" parent="ELeolPFA8f79nLcILOrL-231" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="has" vertex="1">
+          <mxGeometry relative="1" x="0.1505" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-232" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;" value="">
           <mxGeometry height="100" relative="1" width="100" x="0.292" as="geometry">
             <Array as="points">
@@ -653,6 +683,11 @@
             </Array>
             <mxPoint x="1040" y="290" as="sourcePoint" />
             <mxPoint x="1020" y="770" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-243" connectable="0" parent="ELeolPFA8f79nLcILOrL-232" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="has" vertex="1">
+          <mxGeometry relative="1" x="0.5073" y="-1" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-233" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;entryX=0.018;entryY=-0.003;entryDx=0;entryDy=0;entryPerimeter=0;" target="ELeolPFA8f79nLcILOrL-207" value="">
@@ -665,6 +700,11 @@
             <mxPoint x="1177.2199999999998" y="469.03999999999996" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-244" connectable="0" parent="ELeolPFA8f79nLcILOrL-233" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="changed by" vertex="1">
+          <mxGeometry relative="1" x="0.0306" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-234" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;entryX=0;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" value="">
           <mxGeometry height="100" relative="1" width="100" x="-0.0069" as="geometry">
             <Array as="points">
@@ -675,10 +715,20 @@
             <mxPoint x="1000" y="935" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-245" connectable="0" parent="ELeolPFA8f79nLcILOrL-234" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="contains" vertex="1">
+          <mxGeometry relative="1" x="-0.4175" y="-3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="ELeolPFA8f79nLcILOrL-235" edge="1" parent="1" source="ELeolPFA8f79nLcILOrL-197" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;defaultLabelBackgroundColor=page;exitX=1.002;exitY=0.23;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
           <mxGeometry height="100" relative="1" width="100" x="-0.0627" as="geometry">
             <mxPoint x="1700.5" y="780" as="sourcePoint" />
             <mxPoint x="1420" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ELeolPFA8f79nLcILOrL-246" connectable="0" parent="ELeolPFA8f79nLcILOrL-235" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=12;defaultLabelBackgroundColor=page;" value="has" vertex="1">
+          <mxGeometry relative="1" x="0.1727" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
       </root>
