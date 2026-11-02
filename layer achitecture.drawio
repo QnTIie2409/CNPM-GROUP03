@@ -1,10 +1,10 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Page-1" id="JSR5Xnj6QeFCr6ZODSuE">
-    <mxGraphModel dx="1043" dy="659" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1252" dy="791" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="g88eXap249I4aJEryjMN-2" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;strokeWidth=1.5;fontSize=11;align=center;verticalAlign=middle;" value="Client&lt;br&gt;&lt;br&gt;Web browser&lt;br&gt;on a desktop&lt;br&gt;or a phone&lt;br&gt;&lt;br&gt;Chrome, Edge,&lt;br&gt;Firefox, Safari" vertex="1">
+        <mxCell id="g88eXap249I4aJEryjMN-2" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;strokeWidth=1.5;fontSize=11;align=center;verticalAlign=middle;" value="Client&lt;br&gt;APP on a desktop&lt;br&gt;or a phone" vertex="1">
           <mxGeometry height="133" width="130" x="8" y="12" as="geometry" />
         </mxCell>
         <mxCell id="g88eXap249I4aJEryjMN-3" parent="1" style="text;html=1;fontSize=11;align=center;verticalAlign=middle;whiteSpace=wrap;fontStyle=2;" value="Guest · Student&lt;br&gt;Lecturer · Admin" vertex="1">
