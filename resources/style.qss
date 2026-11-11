@@ -1,0 +1,104 @@
+/* ==========================================================
+   UTH Student Attendance System - Stylesheet (GUI 2.0 Theme)
+   ========================================================== */
+
+QMainWindow {
+    background-color: #F8FAFC;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+QWidget {
+    font-size: 13px;
+    color: #1E293B;
+}
+
+/* Sidebar & Header */
+#sidebarWidget {
+    background-color: #0F172A;
+    border-right: 1px solid #E2E8F0;
+}
+
+#headerWidget {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+/* Cards & Groups */
+QGroupBox {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    margin-top: 1.2em;
+    padding: 12px;
+    font-weight: bold;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 8px;
+    color: #0284C7;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #0284C7;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: none;
+}
+
+QPushButton:hover {
+    background-color: #0369A1;
+}
+
+QPushButton:pressed {
+    background-color: #075985;
+}
+
+QPushButton#btnDanger {
+    background-color: #EF4444;
+}
+
+QPushButton#btnDanger:hover {
+    background-color: #DC2626;
+}
+
+/* Text Inputs */
+QLineEdit, QTextEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+QLineEdit:focus, QTextEdit:focus {
+    border: 2px solid #0284C7;
+}
+
+/* Status Badges */
+QLabel#statusPresent {
+    color: #15803D;
+    background-color: #DCFCE7;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: bold;
+}
+
+QLabel#statusLate {
+    color: #B45309;
+    background-color: #FEF3C7;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: bold;
+}
+
+QLabel#statusAbsent {
+    color: #B91C1C;
+    background-color: #FEE2E2;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: bold;
+}
