@@ -34,12 +34,12 @@ CNPM-GROUP03/
 
 | Thành viên | Vai trò | Trách nhiệm chính | File phụ trách |
 | :--- | :--- | :--- | :--- |
-| **TV 1** | **Database & Data Access** | Quản lý MySQL schema, dữ liệu mẫu seed, viết 5 Repositories (`QSqlQuery`), `config.ini`, Logger | `database/`, `src/repositories/` |
-| **TV 2** | **Backend 1** | Đăng nhập/Đăng xuất (`AuthService`), Quản lý tài khoản SV/GV & Môn học (`AccountService`, `CourseService`) | `src/services/AuthService.*`, `AccountService.*`, `CourseService.*` |
-| **TV 3** | **Backend 2** | Mở/đóng phiên điểm danh (`SessionService`), Timer xoay mã 60s, Xử lý check-in SV (`CheckInService`) | `src/services/SessionService.*`, `CheckInService.*` |
-| **TV 4** | **Backend 3** | Tính % Chuyên cần, Báo cáo & Giảng viên sửa điểm danh (`AttendanceService`), Thời khóa biểu (`TimetableService`) | `src/services/AttendanceService.*`, `TimetableService.*` |
-| **TV 5** | **UI/UX 1** | Màn hình Đăng nhập (`UI-01`), Cụm màn hình Sinh viên (`UI-02` -> `UI-06`), CSS theme `style.qss` | `src/ui/auth/`, `src/ui/student/`, `resources/` |
-| **TV 6** | **UI/UX 2** | Cụm màn hình Giảng viên (`UI-07` -> `UI-11`), Admin (`UI-12` -> `UI-14`), Dialogs xác nhận (`UI-15`) | `src/ui/lecturer/`, `src/ui/admin/`, `src/ui/dialogs/` |
+| **Mai Nhật Huy** | **Database & Data Access** | Quản lý MySQL schema, dữ liệu mẫu seed, viết 5 Repositories (`QSqlQuery`), `config.ini`, Logger | `database/`, `src/repositories/` |
+| **Lê Đình Thắng** | **Backend 1** | Đăng nhập/Đăng xuất (`AuthService`), Quản lý tài khoản SV/GV & Môn học (`AccountService`, `CourseService`) | `src/services/AuthService.*`, `AccountService.*`, `CourseService.*` |
+| **Thân Đức Tiến** | **Backend 2** | Mở/đóng phiên điểm danh (`SessionService`), Timer xoay mã 60s, Xử lý check-in SV (`CheckInService`) | `src/services/SessionService.*`, `CheckInService.*` |
+| **Ngọc Thanh** | **Backend 3** | Tính % Chuyên cần, Báo cáo & Giảng viên sửa điểm danh (`AttendanceService`), Thời khóa biểu (`TimetableService`) | `src/services/AttendanceService.*`, `TimetableService.*` |
+| **Dương Vĩ Tín** | **UI/UX 1** | Màn hình Đăng nhập (`UI-01`), Cụm màn hình Sinh viên (`UI-02` -> `UI-06`), CSS theme `style.qss` | `src/ui/auth/`, `src/ui/student/`, `resources/` |
+| **Nguyễn Huy** | **UI/UX 2** | Cụm màn hình Giảng viên (`UI-07` -> `UI-11`), Admin (`UI-12` -> `UI-14`), Dialogs xác nhận (`UI-15`) | `src/ui/lecturer/`, `src/ui/admin/`, `src/ui/dialogs/` |
 
 ---
 
