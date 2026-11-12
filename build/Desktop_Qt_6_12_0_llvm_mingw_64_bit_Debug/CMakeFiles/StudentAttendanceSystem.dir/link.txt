@@ -1,0 +1,3 @@
+D:\Qt\Tools\CMake_64\bin\cmake.exe -E rm -f CMakeFiles\StudentAttendanceSystem.dir/objects.a
+D:\Qt\Tools\llvm-mingw2217_64\bin\llvm-ar.exe qc CMakeFiles\StudentAttendanceSystem.dir/objects.a @CMakeFiles\StudentAttendanceSystem.dir\objects1.rsp
+D:\Qt\Tools\llvm-mingw2217_64\bin\clang++.exe -g -mwindows -Wl,--whole-archive CMakeFiles\StudentAttendanceSystem.dir/objects.a -Wl,--no-whole-archive -o StudentAttendanceSystem.exe -Wl,--out-implib,libStudentAttendanceSystem.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\StudentAttendanceSystem.dir\linkLibs.rsp
