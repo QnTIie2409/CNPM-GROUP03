@@ -30,10 +30,11 @@ struct ServiceResult
 };
 
 // Kết nối CSDL dùng chung cho mọi service.
-// Mặc định dùng kết nối mặc định của Qt (QSqlDatabase::addDatabase không đặt tên).
-// Nếu nhóm đặt tên kết nối riêng thì chỉ cần sửa ở đây.
 inline QSqlDatabase serviceDb()
 {
+    if (QSqlDatabase::contains("qt_mysql_main")) {
+        return QSqlDatabase::database("qt_mysql_main");
+    }
     return QSqlDatabase::database();
 }
 

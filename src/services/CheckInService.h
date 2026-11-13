@@ -5,6 +5,7 @@
 #include "../repositories/SessionRepository.h"
 #include "../repositories/CourseRepository.h"
 #include "../repositories/AttendanceRepository.h"
+#include "ServiceCommon.h"
 #include <QString>
 
 enum class CheckInResultCode {
@@ -21,6 +22,7 @@ struct CheckInResponse {
     CheckInResultCode code;
     QString message;
     AttendanceStatus status = AttendanceStatus::ABSENT;
+    QDateTime checkInTime;
 };
 
 class CheckInService {

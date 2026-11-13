@@ -47,3 +47,4 @@ qrc_*.cpp
 *.sqlite
 *.sqlite3
 .env
+.app.log
