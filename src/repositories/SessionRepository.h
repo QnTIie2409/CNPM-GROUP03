@@ -1,4 +1,4 @@
-#ifndef SESSIONREPOSITORY_H
+﻿#ifndef SESSIONREPOSITORY_H
 #define SESSIONREPOSITORY_H
 
 #include "../models/AttendanceSession.h"
@@ -16,4 +16,4 @@ public:
     bool closeSession(int sessionId);
 };
 
-#endif // SESSIONREPOSITORY_H
+#endif

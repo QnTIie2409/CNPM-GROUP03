@@ -1,4 +1,4 @@
-#include "ScheduleRepository.h"
+﻿#include "ScheduleRepository.h"
 #include "DatabaseManager.h"
 #include "../utils/Logger.h"
 #include <QSqlQuery>

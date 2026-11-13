@@ -1,4 +1,4 @@
-#ifndef USER_H
+﻿#ifndef USER_H
 #define USER_H
 
 #include <QString>
@@ -36,4 +36,4 @@ struct User {
     }
 };
 
-#endif // USER_H
+#endif

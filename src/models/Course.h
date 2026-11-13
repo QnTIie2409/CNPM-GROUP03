@@ -1,4 +1,4 @@
-#ifndef COURSE_H
+﻿#ifndef COURSE_H
 #define COURSE_H
 
 #include <QString>
@@ -11,4 +11,4 @@ struct Course {
     QString lecturerName;
 };
 
-#endif // COURSE_H
+#endif

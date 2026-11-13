@@ -1,7 +1,7 @@
-#include "AuthService.h"
+﻿#include "AuthService.h"
 
 #include <QCryptographicHash>
-#include <QPasswordDigestor>   // thuộc module Qt Network
+#include <QPasswordDigestor>
 #include <QRandomGenerator>
 #include <QStringList>
 
@@ -20,7 +20,6 @@ QByteArray deriveKey(const QString &password, const QByteArray &salt,
                                               iterations, keyBytes);
 }
 
-// So sánh thời gian không phụ thuộc vị trí byte khác nhau.
 bool constantTimeEqual(const QByteArray &a, const QByteArray &b)
 {
     if (a.size() != b.size())
@@ -31,14 +30,13 @@ bool constantTimeEqual(const QByteArray &a, const QByteArray &b)
     return diff == 0;
 }
 
-// Hash MD5 hex của bản demo trước đây.
 QString legacyMd5(const QString &password)
 {
     return QString::fromLatin1(
         QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Md5).toHex());
 }
 
-} // namespace
+}
 
 AuthService& AuthService::instance() {
     static AuthService inst;
@@ -63,7 +61,6 @@ bool AuthService::verifyPassword(const QString& password, const QString& storedH
     if (storedHash.isEmpty())
         return false;
 
-    // Hash cũ (MD5 hex) của bản demo.
     if (!storedHash.startsWith(kAlgoTag))
         return storedHash.compare(legacyMd5(password), Qt::CaseInsensitive) == 0;
 
@@ -88,9 +85,7 @@ bool AuthService::verifyPassword(const QString& password, const QString& storedH
 bool AuthService::login(const QString& email, const QString& password) {
     m_lastError.clear();
 
-    // NFR-03: sai email hay sai mật khẩu đều dùng chung một thông báo,
-    // không để lộ email có tồn tại hay không.
-    const QString genericError = QStringLiteral("Email hoặc mật khẩu không đúng.");
+    const QString genericError = QStringLiteral("Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng.");
 
     if (email.trimmed().isEmpty() || password.isEmpty()) {
         m_lastError = genericError;
@@ -99,8 +94,6 @@ bool AuthService::login(const QString& email, const QString& password) {
 
     auto userOpt = m_userRepo.findByEmail(email.trimmed());
     if (!userOpt.has_value()) {
-        // Email không tồn tại: vẫn băm một lần để thời gian phản hồi gần giống
-        // trường hợp email đúng.
         static const QString dummyHash = hashPassword(QStringLiteral("dummy-password"));
         (void)verifyPassword(password, dummyHash);
         m_lastError = genericError;
@@ -113,10 +106,9 @@ bool AuthService::login(const QString& email, const QString& password) {
         return false;
     }
 
-    // is_active == true mới được đăng nhập (chỉ báo sau khi mật khẩu đã đúng).
     if (!u.isActive) {
         m_lastError = QStringLiteral(
-            "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+            "TĂ i khoáº£n Ä‘Ă£ bá»‹ vĂ´ hiá»‡u hĂ³a. Vui lĂ²ng liĂªn há»‡ quáº£n trá»‹ viĂªn.");
         return false;
     }
 

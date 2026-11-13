@@ -1,4 +1,4 @@
-#include "CourseService.h"
+﻿#include "CourseService.h"
 
 #include <QDebug>
 #include <QSqlQuery>
@@ -14,7 +14,6 @@ bool courseExists(QSqlDatabase &db, int courseId)
     return q.exec() && q.next();
 }
 
-// Mã môn học trùng với môn khác (excludeCourseId = 0 khi tạo mới).
 bool courseCodeTaken(QSqlDatabase &db, const QString &code, int excludeCourseId)
 {
     QSqlQuery q(db);
@@ -25,7 +24,6 @@ bool courseCodeTaken(QSqlDatabase &db, const QString &code, int excludeCourseId)
     return q.exec() && q.next();
 }
 
-// Kiểm tra userId tồn tại và đúng vai trò (LECTURER hoặc STUDENT).
 ServiceResult checkRole(QSqlDatabase &db, int userId, const QString &role,
                         const QString &notFoundMsg, const QString &wrongRoleMsg)
 {
@@ -42,27 +40,26 @@ ServiceResult checkRole(QSqlDatabase &db, int userId, const QString &role,
 ServiceResult checkLecturer(QSqlDatabase &db, int lecturerId)
 {
     return checkRole(db, lecturerId, QStringLiteral("LECTURER"),
-                     QStringLiteral("Không tìm thấy giảng viên."),
-                     QStringLiteral("Người được phân công phải là giảng viên."));
+                     QStringLiteral("KhĂ´ng tĂ¬m tháº¥y giáº£ng viĂªn."),
+                     QStringLiteral("NgÆ°á»i Ä‘Æ°á»£c phĂ¢n cĂ´ng pháº£i lĂ  giáº£ng viĂªn."));
 }
 
 ServiceResult checkStudent(QSqlDatabase &db, int studentId)
 {
     return checkRole(db, studentId, QStringLiteral("STUDENT"),
-                     QStringLiteral("Không tìm thấy sinh viên."),
-                     QStringLiteral("Chỉ có thể ghi danh tài khoản sinh viên."));
+                     QStringLiteral("KhĂ´ng tĂ¬m tháº¥y sinh viĂªn."),
+                     QStringLiteral("Chá»‰ cĂ³ thá»ƒ ghi danh tĂ i khoáº£n sinh viĂªn."));
 }
 
 qint64 lastInsertId(QSqlDatabase &db)
 {
-    // QODBC không hỗ trợ QSqlQuery::lastInsertId() ổn định, nên hỏi MySQL trực tiếp.
     QSqlQuery q(db);
     if (q.exec(QStringLiteral("SELECT LAST_INSERT_ID()")) && q.next())
         return q.value(0).toLongLong();
     return 0;
 }
 
-} // namespace
+}
 
 ServiceResult CourseService::createCourse(const QString &code, const QString &name,
                                           int lecturerId)
@@ -70,18 +67,18 @@ ServiceResult CourseService::createCourse(const QString &code, const QString &na
     const QString c = code.trimmed();
     const QString n = name.trimmed();
     if (c.isEmpty() || n.isEmpty())
-        return ServiceResult::failure(QStringLiteral("Vui lòng nhập mã và tên môn học."));
+        return ServiceResult::failure(QStringLiteral("Vui lĂ²ng nháº­p mĂ£ vĂ  tĂªn mĂ´n há»c."));
 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
     const ServiceResult lecturer = checkLecturer(db, lecturerId);
     if (!lecturer.ok)
         return lecturer;
 
     if (courseCodeTaken(db, c, 0))
-        return ServiceResult::failure(QStringLiteral("Mã môn học đã tồn tại."));
+        return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral("INSERT INTO courses (code, name, user_id) VALUES (?, ?, ?)"));
@@ -90,11 +87,11 @@ ServiceResult CourseService::createCourse(const QString &code, const QString &na
     q.addBindValue(lecturerId);
     if (!q.exec()) {
         if (isDuplicateKeyError(q.lastError()))
-            return ServiceResult::failure(QStringLiteral("Mã môn học đã tồn tại."));
-        qWarning() << "createCourse thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể tạo môn học. Vui lòng thử lại."));
+            return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
+        qWarning() << "createCourse tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ táº¡o mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Tạo môn học thành công."), lastInsertId(db));
+    return ServiceResult::success(QStringLiteral("Táº¡o mĂ´n há»c thĂ nh cĂ´ng."), lastInsertId(db));
 }
 
 ServiceResult CourseService::updateCourse(int courseId, const QString &code,
@@ -103,16 +100,16 @@ ServiceResult CourseService::updateCourse(int courseId, const QString &code,
     const QString c = code.trimmed();
     const QString n = name.trimmed();
     if (c.isEmpty() || n.isEmpty())
-        return ServiceResult::failure(QStringLiteral("Vui lòng nhập mã và tên môn học."));
+        return ServiceResult::failure(QStringLiteral("Vui lĂ²ng nháº­p mĂ£ vĂ  tĂªn mĂ´n há»c."));
 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("Không tìm thấy môn học."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
     if (courseCodeTaken(db, c, courseId))
-        return ServiceResult::failure(QStringLiteral("Mã môn học đã tồn tại."));
+        return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral("UPDATE courses SET code = ?, name = ? WHERE course_id = ?"));
@@ -121,21 +118,21 @@ ServiceResult CourseService::updateCourse(int courseId, const QString &code,
     q.addBindValue(courseId);
     if (!q.exec()) {
         if (isDuplicateKeyError(q.lastError()))
-            return ServiceResult::failure(QStringLiteral("Mã môn học đã tồn tại."));
-        qWarning() << "updateCourse thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể cập nhật môn học. Vui lòng thử lại."));
+            return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
+        qWarning() << "updateCourse tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ cáº­p nháº­t mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Cập nhật môn học thành công."), courseId);
+    return ServiceResult::success(QStringLiteral("Cáº­p nháº­t mĂ´n há»c thĂ nh cĂ´ng."), courseId);
 }
 
 ServiceResult CourseService::assignLecturer(int courseId, int lecturerId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("Không tìm thấy môn học."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
 
     const ServiceResult lecturer = checkLecturer(db, lecturerId);
     if (!lecturer.ok)
@@ -146,31 +143,30 @@ ServiceResult CourseService::assignLecturer(int courseId, int lecturerId)
     q.addBindValue(lecturerId);
     q.addBindValue(courseId);
     if (!q.exec()) {
-        qWarning() << "assignLecturer thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể phân công giảng viên. Vui lòng thử lại."));
+        qWarning() << "assignLecturer tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ phĂ¢n cĂ´ng giáº£ng viĂªn. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Đã phân công giảng viên."), courseId);
+    return ServiceResult::success(QStringLiteral("ÄĂ£ phĂ¢n cĂ´ng giáº£ng viĂªn."), courseId);
 }
 
 ServiceResult CourseService::deleteCourse(int courseId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("Không tìm thấy môn học."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
 
     const QString blocked = QStringLiteral(
-        "Không thể xóa môn học đã có phiên điểm danh trong hệ thống.");
+        "KhĂ´ng thá»ƒ xĂ³a mĂ´n há»c Ä‘Ă£ cĂ³ phiĂªn Ä‘iá»ƒm danh trong há»‡ thá»‘ng.");
 
-    // FR-15: môn đã có phiên điểm danh thì cấm xóa.
     QSqlQuery count(db);
     count.prepare(QStringLiteral(
         "SELECT COUNT(*) FROM attendance_sessions WHERE course_id = ?"));
     count.addBindValue(courseId);
     if (!count.exec() || !count.next())
-        return ServiceResult::failure(QStringLiteral("Không kiểm tra được dữ liệu điểm danh. Vui lòng thử lại."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng kiá»ƒm tra Ä‘Æ°á»£c dá»¯ liá»‡u Ä‘iá»ƒm danh. Vui lĂ²ng thá»­ láº¡i."));
     if (count.value(0).toInt() > 0)
         return ServiceResult::failure(blocked);
 
@@ -178,23 +174,22 @@ ServiceResult CourseService::deleteCourse(int courseId)
     q.prepare(QStringLiteral("DELETE FROM courses WHERE course_id = ?"));
     q.addBindValue(courseId);
     if (!q.exec()) {
-        // Khóa ngoại của attendance_sessions là lớp chặn cuối cùng.
         if (isForeignKeyError(q.lastError()))
             return ServiceResult::failure(blocked);
-        qWarning() << "deleteCourse thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể xóa môn học. Vui lòng thử lại."));
+        qWarning() << "deleteCourse tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ xĂ³a mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Đã xóa môn học."), courseId);
+    return ServiceResult::success(QStringLiteral("ÄĂ£ xĂ³a mĂ´n há»c."), courseId);
 }
 
 ServiceResult CourseService::enrollStudent(int courseId, int studentId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("Không tìm thấy môn học."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
 
     const ServiceResult student = checkStudent(db, studentId);
     if (!student.ok)
@@ -206,7 +201,7 @@ ServiceResult CourseService::enrollStudent(int courseId, int studentId)
     dup.addBindValue(studentId);
     dup.addBindValue(courseId);
     if (dup.exec() && dup.next())
-        return ServiceResult::failure(QStringLiteral("Sinh viên đã có trong môn học này."));
+        return ServiceResult::failure(QStringLiteral("Sinh viĂªn Ä‘Ă£ cĂ³ trong mĂ´n há»c nĂ y."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral(
@@ -215,18 +210,18 @@ ServiceResult CourseService::enrollStudent(int courseId, int studentId)
     q.addBindValue(courseId);
     if (!q.exec()) {
         if (isDuplicateKeyError(q.lastError()))
-            return ServiceResult::failure(QStringLiteral("Sinh viên đã có trong môn học này."));
-        qWarning() << "enrollStudent thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể thêm sinh viên vào môn học. Vui lòng thử lại."));
+            return ServiceResult::failure(QStringLiteral("Sinh viĂªn Ä‘Ă£ cĂ³ trong mĂ´n há»c nĂ y."));
+        qWarning() << "enrollStudent tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ thĂªm sinh viĂªn vĂ o mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Đã thêm sinh viên vào môn học."), lastInsertId(db));
+    return ServiceResult::success(QStringLiteral("ÄĂ£ thĂªm sinh viĂªn vĂ o mĂ´n há»c."), lastInsertId(db));
 }
 
 ServiceResult CourseService::unenrollStudent(int courseId, int studentId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
     QSqlQuery find(db);
     find.prepare(QStringLiteral(
@@ -234,7 +229,7 @@ ServiceResult CourseService::unenrollStudent(int courseId, int studentId)
     find.addBindValue(studentId);
     find.addBindValue(courseId);
     if (!find.exec() || !find.next())
-        return ServiceResult::failure(QStringLiteral("Sinh viên chưa ghi danh vào môn học này."));
+        return ServiceResult::failure(QStringLiteral("Sinh viĂªn chÆ°a ghi danh vĂ o mĂ´n há»c nĂ y."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral(
@@ -242,8 +237,8 @@ ServiceResult CourseService::unenrollStudent(int courseId, int studentId)
     q.addBindValue(studentId);
     q.addBindValue(courseId);
     if (!q.exec()) {
-        qWarning() << "unenrollStudent thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể xóa sinh viên khỏi môn học. Vui lòng thử lại."));
+        qWarning() << "unenrollStudent tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ xĂ³a sinh viĂªn khá»i mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Đã xóa sinh viên khỏi môn học."));
+    return ServiceResult::success(QStringLiteral("ÄĂ£ xĂ³a sinh viĂªn khá»i mĂ´n há»c."));
 }

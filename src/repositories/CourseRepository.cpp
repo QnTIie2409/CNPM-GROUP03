@@ -1,4 +1,4 @@
-#include "CourseRepository.h"
+﻿#include "CourseRepository.h"
 #include "DatabaseManager.h"
 #include "../utils/Logger.h"
 #include <QSqlQuery>

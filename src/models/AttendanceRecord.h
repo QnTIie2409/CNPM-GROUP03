@@ -1,4 +1,4 @@
-#ifndef ATTENDANCERECORD_H
+﻿#ifndef ATTENDANCERECORD_H
 #define ATTENDANCERECORD_H
 
 #include <QString>
@@ -38,4 +38,4 @@ struct AttendanceRecord {
     }
 };
 
-#endif // ATTENDANCERECORD_H
+#endif

@@ -1,4 +1,4 @@
-#ifndef CHECKINSERVICE_H
+﻿#ifndef CHECKINSERVICE_H
 #define CHECKINSERVICE_H
 
 #include "../models/AttendanceRecord.h"
@@ -38,4 +38,4 @@ private:
     AttendanceRepository m_attendanceRepo;
 };
 
-#endif // CHECKINSERVICE_H
+#endif

@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -21,4 +21,4 @@ private:
     Ui::MainWindow *ui;
 };
 
-#endif // MAINWINDOW_H
+#endif

@@ -1,4 +1,4 @@
-#ifndef SCHEDULEREPOSITORY_H
+﻿#ifndef SCHEDULEREPOSITORY_H
 #define SCHEDULEREPOSITORY_H
 
 #include "../models/ScheduleEntry.h"
@@ -14,4 +14,4 @@ public:
     bool deleteEntry(int scheduleId);
 };
 
-#endif // SCHEDULEREPOSITORY_H
+#endif

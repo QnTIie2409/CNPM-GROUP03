@@ -1,4 +1,4 @@
-#ifndef SESSIONSERVICE_H
+﻿#ifndef SESSIONSERVICE_H
 #define SESSIONSERVICE_H
 
 #include "../models/AttendanceSession.h"
@@ -35,6 +35,5 @@ private:
     QTimer *m_timer = nullptr;
     int m_activeSessionId = -1;
 };
-// Đổi trả về ServiceResult thay vì int đơn thuần
 
-#endif // SESSIONSERVICE_H
+#endif

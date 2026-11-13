@@ -1,4 +1,4 @@
-#ifndef LOGGER_H
+﻿#ifndef LOGGER_H
 #define LOGGER_H
 
 #include <QString>
@@ -10,4 +10,4 @@ public:
     static void logError(const QString& error);
 };
 
-#endif // LOGGER_H
+#endif

@@ -1,4 +1,4 @@
-#include "DatabaseManager.h"
+﻿#include "DatabaseManager.h"
 #include "../utils/ConfigReader.h"
 #include "../utils/Logger.h"
 #include <QDebug>

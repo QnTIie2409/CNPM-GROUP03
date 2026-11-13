@@ -1,4 +1,4 @@
-#ifndef SCHEDULEENTRY_H
+﻿#ifndef SCHEDULEENTRY_H
 #define SCHEDULEENTRY_H
 
 #include <QString>
@@ -16,7 +16,7 @@ struct ScheduleEntry {
     QString courseCode;
     QString courseName;
     ScheduleType type = ScheduleType::CLASS;
-    int dayOfWeek = 1; // 1 = Mon .. 7 = Sun
+    int dayOfWeek = 1;
     QTime startTime;
     QTime endTime;
     QString room;
@@ -24,4 +24,4 @@ struct ScheduleEntry {
     QDate endDate;
 };
 
-#endif // SCHEDULEENTRY_H
+#endif

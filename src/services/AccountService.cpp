@@ -1,4 +1,4 @@
-#include "AccountService.h"
+﻿#include "AccountService.h"
 
 #include <QDebug>
 #include <QSqlQuery>
@@ -8,8 +8,6 @@
 
 namespace {
 
-// column chỉ nhận hằng số nội bộ ("email" hoặc "code"), không bao giờ nhận
-// dữ liệu người dùng nhập vào.
 bool valueTaken(QSqlDatabase &db, const QString &column, const QString &value)
 {
     QSqlQuery q(db);
@@ -20,15 +18,13 @@ bool valueTaken(QSqlDatabase &db, const QString &column, const QString &value)
 
 qint64 lastInsertId(QSqlDatabase &db)
 {
-    // QODBC không hỗ trợ QSqlQuery::lastInsertId() ổn định, nên hỏi MySQL trực tiếp
-    // (cùng một kết nối nên giá trị đúng với lệnh INSERT vừa chạy).
     QSqlQuery q(db);
     if (q.exec(QStringLiteral("SELECT LAST_INSERT_ID()")) && q.next())
         return q.value(0).toLongLong();
     return 0;
 }
 
-} // namespace
+}
 
 ServiceResult AccountService::createAccount(const QString &role, const QString &code,
                                             const QString &fullName, const QString &email,
@@ -36,24 +32,23 @@ ServiceResult AccountService::createAccount(const QString &role, const QString &
 {
     const QString r = role.trimmed().toUpper();
     if (r != QLatin1String("STUDENT") && r != QLatin1String("LECTURER"))
-        return ServiceResult::failure(QStringLiteral("Vai trò phải là sinh viên hoặc giảng viên."));
+        return ServiceResult::failure(QStringLiteral("Vai trĂ² pháº£i lĂ  sinh viĂªn hoáº·c giáº£ng viĂªn."));
 
     const QString c = code.trimmed();
     const QString name = fullName.trimmed();
     const QString mail = email.trimmed().toLower();
 
     if (c.isEmpty() || name.isEmpty() || mail.isEmpty() || password.isEmpty())
-        return ServiceResult::failure(QStringLiteral("Vui lòng nhập đầy đủ mã, họ tên, email và mật khẩu."));
+        return ServiceResult::failure(QStringLiteral("Vui lĂ²ng nháº­p Ä‘áº§y Ä‘á»§ mĂ£, há» tĂªn, email vĂ  máº­t kháº©u."));
 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
-    // Mã và email phải duy nhất.
     if (valueTaken(db, QStringLiteral("code"), c))
-        return ServiceResult::failure(QStringLiteral("Mã này đã tồn tại."));
+        return ServiceResult::failure(QStringLiteral("MĂ£ nĂ y Ä‘Ă£ tá»“n táº¡i."));
     if (valueTaken(db, QStringLiteral("email"), mail))
-        return ServiceResult::failure(QStringLiteral("Email đã được sử dụng."));
+        return ServiceResult::failure(QStringLiteral("Email Ä‘Ă£ Ä‘Æ°á»£c sá»­ dá»¥ng."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral(
@@ -67,31 +62,31 @@ ServiceResult AccountService::createAccount(const QString &role, const QString &
 
     if (!q.exec()) {
         if (isDuplicateKeyError(q.lastError()))
-            return ServiceResult::failure(QStringLiteral("Mã hoặc email đã tồn tại."));
-        qWarning() << "createAccount thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể tạo tài khoản. Vui lòng thử lại."));
+            return ServiceResult::failure(QStringLiteral("MĂ£ hoáº·c email Ä‘Ă£ tá»“n táº¡i."));
+        qWarning() << "createAccount tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ táº¡o tĂ i khoáº£n. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Tạo tài khoản thành công."), lastInsertId(db));
+    return ServiceResult::success(QStringLiteral("Táº¡o tĂ i khoáº£n thĂ nh cĂ´ng."), lastInsertId(db));
 }
 
 ServiceResult AccountService::deactivate(int userId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("Không kết nối được cơ sở dữ liệu."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
 
     QSqlQuery check(db);
     check.prepare(QStringLiteral("SELECT 1 FROM users WHERE user_id = ?"));
     check.addBindValue(userId);
     if (!check.exec() || !check.next())
-        return ServiceResult::failure(QStringLiteral("Không tìm thấy tài khoản."));
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y tĂ i khoáº£n."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral("UPDATE users SET is_active = 0 WHERE user_id = ?"));
     q.addBindValue(userId);
     if (!q.exec()) {
-        qWarning() << "deactivate thất bại:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("Không thể vô hiệu hóa tài khoản. Vui lòng thử lại."));
+        qWarning() << "deactivate tháº¥t báº¡i:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ vĂ´ hiá»‡u hĂ³a tĂ i khoáº£n. Vui lĂ²ng thá»­ láº¡i."));
     }
-    return ServiceResult::success(QStringLiteral("Đã vô hiệu hóa tài khoản."));
+    return ServiceResult::success(QStringLiteral("ÄĂ£ vĂ´ hiá»‡u hĂ³a tĂ i khoáº£n."));
 }

@@ -1,4 +1,4 @@
-#include "ConfigReader.h"
+﻿#include "ConfigReader.h"
 #include <QFileInfo>
 #include <QCoreApplication>
 
@@ -14,7 +14,6 @@ ConfigReader& ConfigReader::instance() {
 void ConfigReader::load(const QString& filePath) {
     QString path = filePath;
     if (!QFileInfo::exists(path)) {
-        // Try relative to application directory
         path = QCoreApplication::applicationDirPath() + "/" + filePath;
     }
 

@@ -1,4 +1,4 @@
-#ifndef CONFIGREADER_H
+﻿#ifndef CONFIGREADER_H
 #define CONFIGREADER_H
 
 #include <QString>
@@ -25,4 +25,4 @@ private:
     QString m_password = "";
 };
 
-#endif // CONFIGREADER_H
+#endif

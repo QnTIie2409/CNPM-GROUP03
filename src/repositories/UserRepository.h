@@ -1,4 +1,4 @@
-#ifndef USERREPOSITORY_H
+﻿#ifndef USERREPOSITORY_H
 #define USERREPOSITORY_H
 
 #include "../models/User.h"
@@ -16,4 +16,4 @@ public:
     bool setActiveStatus(int userId, bool isActive);
 };
 
-#endif // USERREPOSITORY_H
+#endif

@@ -1,4 +1,4 @@
-#ifndef COURSEREPOSITORY_H
+﻿#ifndef COURSEREPOSITORY_H
 #define COURSEREPOSITORY_H
 
 #include "../models/Course.h"
@@ -25,4 +25,4 @@ public:
     std::vector<User> getEnrolledStudents(int courseId);
 };
 
-#endif // COURSEREPOSITORY_H
+#endif

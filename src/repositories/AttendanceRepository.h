@@ -1,4 +1,4 @@
-#ifndef ATTENDANCEREPOSITORY_H
+﻿#ifndef ATTENDANCEREPOSITORY_H
 #define ATTENDANCEREPOSITORY_H
 
 #include "../models/AttendanceRecord.h"
@@ -16,4 +16,4 @@ public:
     bool updateStatusWithLog(int recordId, AttendanceStatus newStatus, int lecturerUserId, const QString& reason);
 };
 
-#endif // ATTENDANCEREPOSITORY_H
+#endif

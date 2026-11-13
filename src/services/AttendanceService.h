@@ -1,4 +1,4 @@
-#ifndef ATTENDANCESERVICE_H
+﻿#ifndef ATTENDANCESERVICE_H
 #define ATTENDANCESERVICE_H
 
 #include "../models/AttendanceRecord.h"
@@ -27,4 +27,4 @@ private:
     AttendanceRepository m_attendanceRepo;
 };
 
-#endif // ATTENDANCESERVICE_H
+#endif

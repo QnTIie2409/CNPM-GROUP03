@@ -1,4 +1,4 @@
-#include "AttendanceRepository.h"
+﻿#include "AttendanceRepository.h"
 #include "DatabaseManager.h"
 #include "../utils/Logger.h"
 #include <QSqlQuery>
@@ -87,7 +87,6 @@ bool AttendanceRepository::saveCheckIn(int sessionId, int studentUserId, Attenda
 }
 
 bool AttendanceRepository::markAbsentForUnchecked(int sessionId, int courseId) {
-    // Tìm các sinh viên trong enrollments mà chưa có record trong attendance_records của session này
     QSqlQuery query(DatabaseManager::instance().getDatabase());
     query.prepare("INSERT INTO attendance_records (session_id, user_id, status, check_in_time) "
                   "SELECT :sid, e.user_id, 'ABSENT', NULL "
@@ -109,7 +108,6 @@ bool AttendanceRepository::updateStatusWithLog(int recordId, AttendanceStatus ne
     QSqlDatabase db = DatabaseManager::instance().getDatabase();
     db.transaction();
 
-    // 1. Lấy old status
     QSqlQuery qOld(db);
     qOld.prepare("SELECT status FROM attendance_records WHERE record_id = :rid");
     qOld.bindValue(":rid", recordId);
@@ -120,7 +118,6 @@ bool AttendanceRepository::updateStatusWithLog(int recordId, AttendanceStatus ne
     QString oldStatusStr = qOld.value("status").toString();
     QString newStatusStr = AttendanceRecord::statusToString(newStatus);
 
-    // 2. Cập nhật record
     QSqlQuery qUp(db);
     qUp.prepare("UPDATE attendance_records SET status = :status WHERE record_id = :rid");
     qUp.bindValue(":status", newStatusStr);
@@ -130,7 +127,6 @@ bool AttendanceRepository::updateStatusWithLog(int recordId, AttendanceStatus ne
         return false;
     }
 
-    // 3. Ghi vào change log
     QSqlQuery qLog(db);
     qLog.prepare("INSERT INTO attendance_change_logs (record_id, old_status, new_status, reason, changed_at, user_id) "
                  "VALUES (:rid, :old, :new, :reason, NOW(), :uid)");

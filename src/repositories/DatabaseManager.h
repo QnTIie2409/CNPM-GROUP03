@@ -1,4 +1,4 @@
-#ifndef DATABASEMANAGER_H
+﻿#ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 
 #include <QSqlDatabase>
@@ -27,4 +27,4 @@ private:
     QString m_lastError;
 };
 
-#endif // DATABASEMANAGER_H
+#endif

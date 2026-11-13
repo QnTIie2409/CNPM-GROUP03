@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "repositories/DatabaseManager.h"
 #include "services/AuthService.h"
@@ -13,14 +13,12 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Khởi tạo logger và nạp cấu hình Database
     Logger::init("app.log");
     Logger::log("Student Attendance System started.");
 
-    // Kiểm tra drivers SQL sẵn có
     QStringList drivers = DatabaseManager::instance().getAvailableDrivers();
-    ui->txtDrivers->setPlainText("Danh sách SQL Drivers hiện có trong Qt:\n - " + drivers.join("\n - ") +
-                                 "\n\nCấu trúc 3 tầng (Models, Repositories, Services, UI) đã được nạp sẵn sàng!");
+    ui->txtDrivers->setPlainText("Danh sĂ¡ch SQL Drivers hiá»‡n cĂ³ trong Qt:\n - " + drivers.join("\n - ") +
+                                 "\n\nCáº¥u trĂºc 3 táº§ng (Models, Repositories, Services, UI) Ä‘Ă£ Ä‘Æ°á»£c náº¡p sáºµn sĂ ng!");
 
     connect(ui->btnConnect, &QPushButton::clicked, this, &MainWindow::onConnectButtonClicked);
 }
@@ -36,17 +34,17 @@ void MainWindow::onConnectButtonClicked() {
     QString user = ui->editUser->text().trimmed();
     QString pass = ui->editPassword->text();
 
-    ui->lblStatus->setText("Đang kết nối cơ sở dữ liệu...");
+    ui->lblStatus->setText("Äang káº¿t ná»‘i cÆ¡ sá»Ÿ dá»¯ liá»‡u...");
 
     bool ok = DatabaseManager::instance().connectToMySQL(host, port, db, user, pass);
     if (ok) {
         ui->lblStatus->setStyleSheet("color: #15803D; font-weight: bold;");
-        ui->lblStatus->setText("Kết nối MySQL THÀNH CÔNG! Đã sẵn sàng truy vấn.");
-        QMessageBox::information(this, "Thành công", "Đã kết nối thành công tới cơ sở dữ liệu MySQL!\nDatabase: " + db);
+        ui->lblStatus->setText("Káº¿t ná»‘i MySQL THĂ€NH CĂ”NG! ÄĂ£ sáºµn sĂ ng truy váº¥n.");
+        QMessageBox::information(this, "ThĂ nh cĂ´ng", "ÄĂ£ káº¿t ná»‘i thĂ nh cĂ´ng tá»›i cÆ¡ sá»Ÿ dá»¯ liá»‡u MySQL!\nDatabase: " + db);
     } else {
         QString err = DatabaseManager::instance().getLastError();
         ui->lblStatus->setStyleSheet("color: #B91C1C; font-weight: bold;");
-        ui->lblStatus->setText("Kết nối THẤT BẠI!");
-        QMessageBox::warning(this, "Lỗi kết nối", "Không thể kết nối MySQL:\n" + err);
+        ui->lblStatus->setText("Káº¿t ná»‘i THáº¤T Báº I!");
+        QMessageBox::warning(this, "Lá»—i káº¿t ná»‘i", "KhĂ´ng thá»ƒ káº¿t ná»‘i MySQL:\n" + err);
     }
 }

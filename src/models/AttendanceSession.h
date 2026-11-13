@@ -1,4 +1,4 @@
-#ifndef ATTENDANCESESSION_H
+﻿#ifndef ATTENDANCESESSION_H
 #define ATTENDANCESESSION_H
 
 #include <QString>
@@ -23,4 +23,4 @@ struct AttendanceSession {
     QDateTime closedAt;
 };
 
-#endif // ATTENDANCESESSION_H
+#endif

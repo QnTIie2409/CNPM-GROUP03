@@ -1,4 +1,4 @@
-#include "SessionService.h"
+﻿#include "SessionService.h"
 #include <QRandomGenerator>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -22,19 +22,19 @@ QString SessionService::generateRandomCode() {
 ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int durationMin, int presentMin, int lateMin) 
 {
     if (presentMin <= 0 || presentMin > lateMin || lateMin > durationMin) {
-        return ServiceResult::failure("Thời gian các khung giờ không hợp lệ: phải có 0 < Đúng giờ <= Đi muộn <= Tổng thời gian.");
+        return ServiceResult::failure("Thá»i gian cĂ¡c khung giá» khĂ´ng há»£p lá»‡: pháº£i cĂ³ 0 < ÄĂºng giá» <= Äi muá»™n <= Tá»•ng thá»i gian.");
     }
 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen()) {
-        return ServiceResult::failure("Không thể kết nối tới cơ sở dữ liệu.");
+        return ServiceResult::failure("KhĂ´ng thá»ƒ káº¿t ná»‘i tá»›i cÆ¡ sá»Ÿ dá»¯ liá»‡u.");
     }
 
     QSqlQuery checkQuery(db);
     checkQuery.prepare("SELECT session_id FROM attendance_sessions WHERE course_id = ? AND status = 'OPEN' LIMIT 1");
     checkQuery.addBindValue(courseId);
     if (checkQuery.exec() && checkQuery.next()) {
-        return ServiceResult::failure("Môn học này hiện đang có một phiên điểm danh đang mở!");
+        return ServiceResult::failure("MĂ´n há»c nĂ y hiá»‡n Ä‘ang cĂ³ má»™t phiĂªn Ä‘iá»ƒm danh Ä‘ang má»Ÿ!");
     }
     QString code = generateRandomCode();
 
@@ -50,8 +50,8 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
     insertQuery.addBindValue(code);
 
     if (!insertQuery.exec()) {
-        qWarning() << "openSession thất bại:" << insertQuery.lastError().text();
-        return ServiceResult::failure("Không thể tạo phiên điểm danh mới trên database.");
+        qWarning() << "openSession tháº¥t báº¡i:" << insertQuery.lastError().text();
+        return ServiceResult::failure("KhĂ´ng thá»ƒ táº¡o phiĂªn Ä‘iá»ƒm danh má»›i trĂªn database.");
     }
 
     qint64 newSessionId = 0;
@@ -63,24 +63,23 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
     m_activeSessionId = newSessionId;
     m_timer->start(60000); 
 
-    return ServiceResult::success("Mở phiên điểm danh thành công! Mã đầu tiên: " + code, newSessionId);
+    return ServiceResult::success("Má»Ÿ phiĂªn Ä‘iá»ƒm danh thĂ nh cĂ´ng! MĂ£ Ä‘áº§u tiĂªn: " + code, newSessionId);
 }
-
 
 ServiceResult SessionService::closeSession(int sessionId) 
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen()) {
-        return ServiceResult::failure("Không thể kết nối tới cơ sở dữ liệu.");
+        return ServiceResult::failure("KhĂ´ng thá»ƒ káº¿t ná»‘i tá»›i cÆ¡ sá»Ÿ dá»¯ liá»‡u.");
     }
 
     auto sOpt = m_sessionRepo.findById(sessionId);
     if (!sOpt.has_value()) {
-        return ServiceResult::failure("Không tìm thấy phiên điểm danh.");
+        return ServiceResult::failure("KhĂ´ng tĂ¬m tháº¥y phiĂªn Ä‘iá»ƒm danh.");
     }
 
     if (sOpt->status == SessionStatus::CLOSED) {
-        return ServiceResult::failure("Phiên điểm danh này đã được đóng trước đó rồi.");
+        return ServiceResult::failure("PhiĂªn Ä‘iá»ƒm danh nĂ y Ä‘Ă£ Ä‘Æ°á»£c Ä‘Ă³ng trÆ°á»›c Ä‘Ă³ rá»“i.");
     }
 
     db.transaction();
@@ -90,8 +89,8 @@ ServiceResult SessionService::closeSession(int sessionId)
     closeQuery.addBindValue(sessionId);
     if (!closeQuery.exec()) {
         db.rollback();
-        qWarning() << "closeSession thất bại:" << closeQuery.lastError().text();
-        return ServiceResult::failure("Không thể cập nhật trạng thái đóng phiên.");
+        qWarning() << "closeSession tháº¥t báº¡i:" << closeQuery.lastError().text();
+        return ServiceResult::failure("KhĂ´ng thá»ƒ cáº­p nháº­t tráº¡ng thĂ¡i Ä‘Ă³ng phiĂªn.");
     }
 
     QSqlQuery absentQuery(db);
@@ -111,8 +110,8 @@ ServiceResult SessionService::closeSession(int sessionId)
         absentCount = absentQuery.numRowsAffected(); 
     } else {
         db.rollback();
-        qWarning() << "Đánh vắng tự động thất bại:" << absentQuery.lastError().text();
-        return ServiceResult::failure("Lỗi khi tự động đánh vắng sinh viên chưa điểm danh.");
+        qWarning() << "ÄĂ¡nh váº¯ng tá»± Ä‘á»™ng tháº¥t báº¡i:" << absentQuery.lastError().text();
+        return ServiceResult::failure("Lá»—i khi tá»± Ä‘á»™ng Ä‘Ă¡nh váº¯ng sinh viĂªn chÆ°a Ä‘iá»ƒm danh.");
     }
 
     db.commit();
@@ -124,7 +123,7 @@ ServiceResult SessionService::closeSession(int sessionId)
 
     emit sessionClosed(sessionId);
 
-    QString msg = QString("Đã đóng phiên điểm danh thành công! Đã tự động ghi nhận %1 sinh viên vắng mặt (Absent).")
+    QString msg = QString("ÄĂ£ Ä‘Ă³ng phiĂªn Ä‘iá»ƒm danh thĂ nh cĂ´ng! ÄĂ£ tá»± Ä‘á»™ng ghi nháº­n %1 sinh viĂªn váº¯ng máº·t (Absent).")
                       .arg(absentCount);
 
     return ServiceResult::success(msg, sessionId);
