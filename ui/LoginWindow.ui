@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LoginWindow</class>
+ <widget class="QWidget" name="LoginWindow">
+  <property name="geometry"><rect><x>0</x><y>0</y><width>1280</width><height>820</height></rect></property>
+  <property name="minimumSize"><size><width>1100</width><height>700</height></size></property>
+  <property name="windowTitle"><string>UTH Student Attendance - Sign in</string></property>
+  <layout class="QHBoxLayout" name="rootLayout" stretch="3,7">
+   <property name="spacing"><number>0</number></property>
+   <property name="leftMargin"><number>0</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>0</number></property>
+   <property name="bottomMargin"><number>0</number></property>
+
+   <!-- PANEL TRAI -->
+   <item>
+    <widget class="QFrame" name="leftPanel">
+     <layout class="QVBoxLayout" name="leftLayout">
+      <property name="spacing"><number>0</number></property>
+      <property name="leftMargin"><number>52</number></property>
+      <property name="topMargin"><number>52</number></property>
+      <property name="rightMargin"><number>52</number></property>
+      <property name="bottomMargin"><number>40</number></property>
+      <item>
+       <layout class="QHBoxLayout" name="logoRow">
+        <property name="spacing"><number>14</number></property>
+        <item>
+         <layout class="QVBoxLayout" name="logoMarkLayout">
+          <property name="spacing"><number>6</number></property>
+          <item><widget class="QLabel" name="lblLogo"><property name="text"><string>UTH</string></property></widget></item>
+          <item alignment="Qt::AlignLeft">
+           <widget class="QFrame" name="logoBar">
+            <property name="minimumSize"><size><width>64</width><height>4</height></size></property>
+            <property name="maximumSize"><size><width>64</width><height>4</height></size></property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="logoTextLayout">
+          <property name="spacing"><number>2</number></property>
+          <item><widget class="QLabel" name="lblLogoApp"><property name="text"><string>Student</string></property></widget></item>
+          <item><widget class="QLabel" name="lblLogoSub"><property name="text"><string>Attendance</string></property></widget></item>
+          <item>
+           <spacer name="logoTextSpacer">
+            <property name="orientation"><enum>Qt::Vertical</enum></property>
+            <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="logoSpacer">
+          <property name="orientation"><enum>Qt::Horizontal</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item><widget class="QLabel" name="lblUniversity"><property name="text"><string>UNIVERSITY OF TRANSPORT HO CHI MINH CITY</string></property></widget></item>
+      <item>
+       <widget class="QLabel" name="lblHeadline">
+        <property name="text"><string>Every session.&#10;Every student.&#10;One clear record.</string></property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignLeft">
+       <widget class="QFrame" name="redBar">
+        <property name="minimumSize"><size><width>48</width><height>4</height></size></property>
+        <property name="maximumSize"><size><width>48</width><height>4</height></size></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblDescription">
+        <property name="text"><string>The daily attendance workspace for UTH students, lecturers and academic administrators.</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="infoBox">
+        <layout class="QVBoxLayout" name="infoLayout">
+         <property name="spacing"><number>8</number></property>
+         <property name="leftMargin"><number>22</number></property>
+         <property name="topMargin"><number>20</number></property>
+         <property name="rightMargin"><number>22</number></property>
+         <property name="bottomMargin"><number>20</number></property>
+         <item><widget class="QLabel" name="lblInfoTitle"><property name="text"><string>Your university account, connected.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+         <item><widget class="QLabel" name="lblInfoText"><property name="text"><string>Sign in with the account provided by UTH. Your workspace is determined by your assigned role.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <spacer name="leftSpacer">
+        <property name="orientation"><enum>Qt::Vertical</enum></property>
+        <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblSemester">
+        <property name="text"><string>Semester 1 · Academic year 2026–2027 Student Attendance System</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <!-- PANEL PHAI -->
+   <item>
+    <widget class="QFrame" name="rightPanel">
+     <layout class="QHBoxLayout" name="rightOuterLayout">
+      <property name="leftMargin"><number>52</number></property>
+      <property name="topMargin"><number>64</number></property>
+      <property name="rightMargin"><number>52</number></property>
+      <property name="bottomMargin"><number>32</number></property>
+      <item>
+       <widget class="QWidget" name="formContainer">
+        <property name="maximumSize"><size><width>780</width><height>16777215</height></size></property>
+        <layout class="QVBoxLayout" name="formLayout">
+         <property name="spacing"><number>0</number></property>
+         <property name="leftMargin"><number>0</number></property>
+         <property name="topMargin"><number>0</number></property>
+         <property name="rightMargin"><number>0</number></property>
+         <property name="bottomMargin"><number>0</number></property>
+         <item><widget class="QLabel" name="lblWelcome"><property name="text"><string>WELCOME TO UTH</string></property></widget></item>
+         <item><widget class="QLabel" name="lblHeading"><property name="text"><string>Sign in to your workspace</string></property></widget></item>
+         <item><widget class="QLabel" name="lblSubheading"><property name="text"><string>Use your university account to continue.</string></property></widget></item>
+         <item>
+          <widget class="QFrame" name="card">
+           <layout class="QVBoxLayout" name="cardLayout">
+            <property name="spacing"><number>8</number></property>
+            <property name="leftMargin"><number>30</number></property>
+            <property name="topMargin"><number>30</number></property>
+            <property name="rightMargin"><number>30</number></property>
+            <property name="bottomMargin"><number>30</number></property>
+            <item><widget class="QLabel" name="lblAccount"><property name="text"><string>Account ID or email *</string></property></widget></item>
+            <item><widget class="QLineEdit" name="editAccount"><property name="placeholderText"><string>Email</string></property></widget></item>
+            <item><widget class="QLabel" name="lblPassword"><property name="text"><string>Password *</string></property></widget></item>
+            <item>
+             <widget class="QLineEdit" name="editPassword">
+              <property name="echoMode"><enum>QLineEdit::Password</enum></property>
+              <property name="placeholderText"><string>Enter your password</string></property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignLeft">
+             <widget class="QPushButton" name="btnSignIn">
+              <property name="text"><string> Sign in</string></property>
+              <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="divider">
+              <property name="minimumSize"><size><width>0</width><height>1</height></size></property>
+              <property name="maximumSize"><size><width>16777215</width><height>1</height></size></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblNoAccount">
+              <property name="text"><string>No account? Contact academic affairs. Accounts are created by a UTH administrator.</string></property>
+              <property name="wordWrap"><bool>true</bool></property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="errorBanner">
+           <layout class="QHBoxLayout" name="errorLayout">
+            <property name="spacing"><number>10</number></property>
+            <property name="leftMargin"><number>16</number></property>
+            <property name="topMargin"><number>14</number></property>
+            <property name="rightMargin"><number>16</number></property>
+            <property name="bottomMargin"><number>14</number></property>
+            <item><widget class="QLabel" name="lblErrorIcon"/></item>
+            <item>
+             <widget class="QLabel" name="lblErrorText">
+              <property name="text"><string>Unable to sign in. Check your account details and try again.</string></property>
+              <property name="wordWrap"><bool>true</bool></property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lblHelp">
+           <property name="text"><string>Need assistance? Academic affairs · attendance-support@uth.edu.vn</string></property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="formSpacer">
+           <property name="orientation"><enum>Qt::Vertical</enum></property>
+           <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <spacer name="rightSpacer">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
