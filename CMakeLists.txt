@@ -13,16 +13,18 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
 
 # Danh sách mã nguồn dự án theo cấu trúc 3 tầng
 set(SOURCES
-    src/main.cpp
-    src/mainwindow.h
-    src/mainwindow.cpp
-    src/mainwindow.ui
 
     # Utils
     src/utils/ConfigReader.h
     src/utils/ConfigReader.cpp
     src/utils/Logger.h
     src/utils/Logger.cpp
+
+    # Views / Login
+    src/main.cpp
+    src/LoginWindow.ui
+    src/loginwindow.h
+    src/loginwindow.cpp
 
     # Models
     src/models/User.h
@@ -61,7 +63,12 @@ set(SOURCES
     src/services/AttendanceService.cpp
 )
 
-add_executable(StudentAttendanceSystem ${SOURCES})
+add_executable(StudentAttendanceSystem
+    ${SOURCES}
+    src/LoginWindow.ui
+    src/loginwindow.h
+    src/loginwindow.cpp
+)
 
 target_link_libraries(StudentAttendanceSystem PRIVATE
     Qt6::Core
