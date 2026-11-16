@@ -85,7 +85,7 @@ bool AuthService::verifyPassword(const QString& password, const QString& storedH
 bool AuthService::login(const QString& email, const QString& password) {
     m_lastError.clear();
 
-    const QString genericError = QStringLiteral("Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng.");
+    const QString genericError = QStringLiteral("Invalid username or password.");
 
     if (email.trimmed().isEmpty() || password.isEmpty()) {
         m_lastError = genericError;
@@ -93,6 +93,10 @@ bool AuthService::login(const QString& email, const QString& password) {
     }
 
     auto userOpt = m_userRepo.findByEmail(email.trimmed());
+    if (!userOpt.has_value()) {
+        userOpt = m_userRepo.findByCode(email.trimmed());
+    }
+
     if (!userOpt.has_value()) {
         static const QString dummyHash = hashPassword(QStringLiteral("dummy-password"));
         (void)verifyPassword(password, dummyHash);
@@ -108,7 +112,7 @@ bool AuthService::login(const QString& email, const QString& password) {
 
     if (!u.isActive) {
         m_lastError = QStringLiteral(
-            "TĂ i khoáº£n Ä‘Ă£ bá»‹ vĂ´ hiá»‡u hĂ³a. Vui lĂ²ng liĂªn há»‡ quáº£n trá»‹ viĂªn.");
+            "Account has been deactivated. Please contact administrator.");
         return false;
     }
 

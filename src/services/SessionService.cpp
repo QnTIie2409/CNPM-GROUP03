@@ -19,22 +19,23 @@ QString SessionService::generateRandomCode() {
     int code = QRandomGenerator::global()->bounded(100000, 1000000);
     return QString::number(code);
 }
+
 ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int durationMin, int presentMin, int lateMin) 
 {
     if (presentMin <= 0 || presentMin > lateMin || lateMin > durationMin) {
-        return ServiceResult::failure("Thá»i gian cĂ¡c khung giá» khĂ´ng há»£p lá»‡: pháº£i cĂ³ 0 < ÄĂºng giá» <= Äi muá»™n <= Tá»•ng thá»i gian.");
+        return ServiceResult::failure("Invalid time window configuration: must satisfy 0 < OnTime <= Late <= TotalDuration.");
     }
 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen()) {
-        return ServiceResult::failure("KhĂ´ng thá»ƒ káº¿t ná»‘i tá»›i cÆ¡ sá»Ÿ dá»¯ liá»‡u.");
+        return ServiceResult::failure("Cannot connect to database.");
     }
 
     QSqlQuery checkQuery(db);
     checkQuery.prepare("SELECT session_id FROM attendance_sessions WHERE course_id = ? AND status = 'OPEN' LIMIT 1");
     checkQuery.addBindValue(courseId);
     if (checkQuery.exec() && checkQuery.next()) {
-        return ServiceResult::failure("MĂ´n há»c nĂ y hiá»‡n Ä‘ang cĂ³ má»™t phiĂªn Ä‘iá»ƒm danh Ä‘ang má»Ÿ!");
+        return ServiceResult::failure("An attendance session is already open for this course!");
     }
     QString code = generateRandomCode();
 
@@ -50,8 +51,8 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
     insertQuery.addBindValue(code);
 
     if (!insertQuery.exec()) {
-        qWarning() << "openSession tháº¥t báº¡i:" << insertQuery.lastError().text();
-        return ServiceResult::failure("KhĂ´ng thá»ƒ táº¡o phiĂªn Ä‘iá»ƒm danh má»›i trĂªn database.");
+        qWarning() << "openSession failed:" << insertQuery.lastError().text();
+        return ServiceResult::failure("Failed to create new attendance session in database.");
     }
 
     qint64 newSessionId = 0;
@@ -63,23 +64,23 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
     m_activeSessionId = newSessionId;
     m_timer->start(60000); 
 
-    return ServiceResult::success("Má»Ÿ phiĂªn Ä‘iá»ƒm danh thĂ nh cĂ´ng! MĂ£ Ä‘áº§u tiĂªn: " + code, newSessionId);
+    return ServiceResult::success("Attendance session opened successfully! Initial code: " + code, newSessionId);
 }
 
 ServiceResult SessionService::closeSession(int sessionId) 
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen()) {
-        return ServiceResult::failure("KhĂ´ng thá»ƒ káº¿t ná»‘i tá»›i cÆ¡ sá»Ÿ dá»¯ liá»‡u.");
+        return ServiceResult::failure("Cannot connect to database.");
     }
 
     auto sOpt = m_sessionRepo.findById(sessionId);
     if (!sOpt.has_value()) {
-        return ServiceResult::failure("KhĂ´ng tĂ¬m tháº¥y phiĂªn Ä‘iá»ƒm danh.");
+        return ServiceResult::failure("Attendance session not found.");
     }
 
     if (sOpt->status == SessionStatus::CLOSED) {
-        return ServiceResult::failure("PhiĂªn Ä‘iá»ƒm danh nĂ y Ä‘Ă£ Ä‘Æ°á»£c Ä‘Ă³ng trÆ°á»›c Ä‘Ă³ rá»“i.");
+        return ServiceResult::failure("This attendance session has already been closed.");
     }
 
     db.transaction();
@@ -89,8 +90,8 @@ ServiceResult SessionService::closeSession(int sessionId)
     closeQuery.addBindValue(sessionId);
     if (!closeQuery.exec()) {
         db.rollback();
-        qWarning() << "closeSession tháº¥t báº¡i:" << closeQuery.lastError().text();
-        return ServiceResult::failure("KhĂ´ng thá»ƒ cáº­p nháº­t tráº¡ng thĂ¡i Ä‘Ă³ng phiĂªn.");
+        qWarning() << "closeSession failed:" << closeQuery.lastError().text();
+        return ServiceResult::failure("Failed to update session status to CLOSED.");
     }
 
     QSqlQuery absentQuery(db);
@@ -110,8 +111,8 @@ ServiceResult SessionService::closeSession(int sessionId)
         absentCount = absentQuery.numRowsAffected(); 
     } else {
         db.rollback();
-        qWarning() << "ÄĂ¡nh váº¯ng tá»± Ä‘á»™ng tháº¥t báº¡i:" << absentQuery.lastError().text();
-        return ServiceResult::failure("Lá»—i khi tá»± Ä‘á»™ng Ä‘Ă¡nh váº¯ng sinh viĂªn chÆ°a Ä‘iá»ƒm danh.");
+        qWarning() << "Auto-mark absent failed:" << absentQuery.lastError().text();
+        return ServiceResult::failure("Failed to automatically mark absent for remaining students.");
     }
 
     db.commit();
@@ -123,7 +124,7 @@ ServiceResult SessionService::closeSession(int sessionId)
 
     emit sessionClosed(sessionId);
 
-    QString msg = QString("ÄĂ£ Ä‘Ă³ng phiĂªn Ä‘iá»ƒm danh thĂ nh cĂ´ng! ÄĂ£ tá»± Ä‘á»™ng ghi nháº­n %1 sinh viĂªn váº¯ng máº·t (Absent).")
+    QString msg = QString("Attendance session closed successfully! Automatically marked %1 student(s) as Absent.")
                       .arg(absentCount);
 
     return ServiceResult::success(msg, sessionId);
@@ -144,4 +145,3 @@ void SessionService::onRotateCode() {
         emit codeRotated(m_activeSessionId, newCode);
     }
 }
-

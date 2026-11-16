@@ -8,29 +8,38 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+if (MSVC)
+    add_compile_options(/utf-8)
+else()
+    add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
+endif()
+
 # Network: cần cho QPasswordDigestor (băm mật khẩu PBKDF2 trong AuthService)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
 
 # Danh sách mã nguồn dự án theo cấu trúc 3 tầng
 set(SOURCES
-
     # Utils
     src/utils/ConfigReader.h
     src/utils/ConfigReader.cpp
     src/utils/Logger.h
     src/utils/Logger.cpp
 
-    # Views / Login
+    # Views / Screens
     src/main.cpp
     src/LoginWindow.ui
     src/loginwindow.h
     src/loginwindow.cpp
+    src/mainwindow.ui
+    src/mainwindow.h
+    src/mainwindow.cpp
 
     # Models
     src/models/User.h
     src/models/Course.h
     src/models/AttendanceSession.h
     src/models/AttendanceRecord.h
+    src/models/AttendanceChangeLog.h
     src/models/ScheduleEntry.h
 
     # Repositories (Data Access Layer)
@@ -63,12 +72,7 @@ set(SOURCES
     src/services/AttendanceService.cpp
 )
 
-add_executable(StudentAttendanceSystem
-    ${SOURCES}
-    src/LoginWindow.ui
-    src/loginwindow.h
-    src/loginwindow.cpp
-)
+add_executable(StudentAttendanceSystem ${SOURCES})
 
 target_link_libraries(StudentAttendanceSystem PRIVATE
     Qt6::Core

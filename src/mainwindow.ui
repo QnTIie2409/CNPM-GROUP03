@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Student Attendance - Test Connection</string>
+   <string>Student Attendance System - Main Dashboard</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -24,7 +24,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Hệ thống Điểm Danh - Nhóm 03 (CNPM)</string>
+       <string>Student Attendance System - Group 03</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -34,7 +34,7 @@
     <item>
      <widget class="QGroupBox" name="dbGroupBox">
       <property name="title">
-       <string>Cấu hình kết nối MySQL</string>
+       <string>MySQL Database Connection</string>
       </property>
       <layout class="QFormLayout" name="formLayout">
        <item row="0" column="0">
@@ -113,14 +113,14 @@
     <item>
      <widget class="QPushButton" name="btnConnect">
       <property name="text">
-       <string>Kiểm tra kết nối MySQL</string>
+       <string>Test Database Connection</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QLabel" name="lblStatus">
       <property name="text">
-       <string>Trạng thái: Chưa kết nối</string>
+       <string>Status: Connected to Database</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>

@@ -3,3 +3,18 @@
 [2026-11-11 15:39:57] [INFO] Student Attendance System started.
 [2026-11-11 15:55:30] [INFO] Student Attendance System started.
 [2026-11-11 15:56:32] [ERROR] Database connection failed: [Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified, IM002 QODBC: Unable to connect
+[2026-11-16 10:06:30] [INFO] Student Attendance System starting...
+[2026-11-16 10:06:30] [ERROR] Database connection failed: [Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified, IM002 QODBC: Unable to connect
+[2026-11-16 10:06:53] [ERROR] UserRepository::findByEmail failed: 
+[2026-11-16 10:07:07] [ERROR] UserRepository::findByEmail failed: 
+[2026-11-16 10:22:19] [INFO] Student Attendance System starting...
+[2026-11-16 10:22:19] [INFO] Database connected successfully using driver: QMYSQL
+[2026-11-16 10:37:58] [INFO] Student Attendance System starting...
+[2026-11-16 10:37:58] [INFO] Database connected successfully using driver: QMYSQL
+[2026-11-16 10:38:05] [INFO] Login attempt for 'admin': SUCCESS
+[2026-11-16 10:38:07] [INFO] Student Attendance System started.
+[2026-11-16 10:38:15] [ERROR] Database connection failed: Access denied for user 'root'@'localhost' (using password: YES) QMYSQL: Unable to connect
+[2026-11-16 10:38:21] [INFO] Database connected successfully using driver: QMYSQL
+[2026-11-16 10:38:30] [INFO] Database connected successfully using driver: QMYSQL
+[2026-11-16 10:49:45] [INFO] Student Attendance System starting...
+[2026-11-16 10:49:45] [INFO] Database connected successfully using driver: QMYSQL

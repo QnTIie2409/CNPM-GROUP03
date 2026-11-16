@@ -14,11 +14,19 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     Logger::init("app.log");
-    Logger::log("Student Attendance System started.");
+    Logger::log("Student Attendance System dashboard initialized.");
 
     QStringList drivers = DatabaseManager::instance().getAvailableDrivers();
-    ui->txtDrivers->setPlainText("Danh sĂ¡ch SQL Drivers hiá»‡n cĂ³ trong Qt:\n - " + drivers.join("\n - ") +
-                                 "\n\nCáº¥u trĂºc 3 táº§ng (Models, Repositories, Services, UI) Ä‘Ă£ Ä‘Æ°á»£c náº¡p sáºµn sĂ ng!");
+    ui->txtDrivers->setPlainText("Available Qt SQL Drivers:\n - " + drivers.join("\n - ") +
+                                 "\n\n3-Tier Architecture (Models, Repositories, Services, UI) is ready!");
+
+    if (DatabaseManager::instance().isConnected()) {
+        ui->lblStatus->setStyleSheet("color: #15803D; font-weight: bold;");
+        ui->lblStatus->setText("MySQL Connection: SUCCESSFUL (Ready for queries)");
+    } else {
+        ui->lblStatus->setStyleSheet("color: #B91C1C; font-weight: bold;");
+        ui->lblStatus->setText("Status: Not Connected");
+    }
 
     connect(ui->btnConnect, &QPushButton::clicked, this, &MainWindow::onConnectButtonClicked);
 }
@@ -34,17 +42,17 @@ void MainWindow::onConnectButtonClicked() {
     QString user = ui->editUser->text().trimmed();
     QString pass = ui->editPassword->text();
 
-    ui->lblStatus->setText("Äang káº¿t ná»‘i cÆ¡ sá»Ÿ dá»¯ liá»‡u...");
+    ui->lblStatus->setText("Connecting to database...");
 
     bool ok = DatabaseManager::instance().connectToMySQL(host, port, db, user, pass);
     if (ok) {
         ui->lblStatus->setStyleSheet("color: #15803D; font-weight: bold;");
-        ui->lblStatus->setText("Káº¿t ná»‘i MySQL THĂ€NH CĂ”NG! ÄĂ£ sáºµn sĂ ng truy váº¥n.");
-        QMessageBox::information(this, "ThĂ nh cĂ´ng", "ÄĂ£ káº¿t ná»‘i thĂ nh cĂ´ng tá»›i cÆ¡ sá»Ÿ dá»¯ liá»‡u MySQL!\nDatabase: " + db);
+        ui->lblStatus->setText("MySQL Connection SUCCESSFUL! Ready for queries.");
+        QMessageBox::information(this, "Success", "Successfully connected to MySQL database!\nDatabase: " + db);
     } else {
         QString err = DatabaseManager::instance().getLastError();
         ui->lblStatus->setStyleSheet("color: #B91C1C; font-weight: bold;");
-        ui->lblStatus->setText("Káº¿t ná»‘i THáº¤T Báº I!");
-        QMessageBox::warning(this, "Lá»—i káº¿t ná»‘i", "KhĂ´ng thá»ƒ káº¿t ná»‘i MySQL:\n" + err);
+        ui->lblStatus->setText("Connection FAILED!");
+        QMessageBox::warning(this, "Connection Error", "Cannot connect to MySQL database:\n" + err);
     }
 }

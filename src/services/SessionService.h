@@ -1,4 +1,4 @@
-﻿#ifndef SESSIONSERVICE_H
+#ifndef SESSIONSERVICE_H
 #define SESSIONSERVICE_H
 
 #include "../models/AttendanceSession.h"
@@ -14,7 +14,7 @@ class SessionService : public QObject
     Q_OBJECT
 public:
     static SessionService &instance();
-ServiceResult openSession(int courseId, int lecturerUserId,int durationMin = 80, int presentMin = 20, int lateMin = 80);
+    ServiceResult openSession(int courseId, int lecturerUserId,int durationMin = 80, int presentMin = 20, int lateMin = 80);
     ServiceResult closeSession(int sessionId);
     std::optional<AttendanceSession> getOpenSession(int courseId);
     std::optional<AttendanceSession> getSessionById(int sessionId);
@@ -35,5 +35,6 @@ private:
     QTimer *m_timer = nullptr;
     int m_activeSessionId = -1;
 };
+// Đổi trả về ServiceResult thay vì int đơn thuần
 
-#endif
+#endif // SESSIONSERVICE_H

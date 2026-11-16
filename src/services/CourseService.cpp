@@ -40,15 +40,15 @@ ServiceResult checkRole(QSqlDatabase &db, int userId, const QString &role,
 ServiceResult checkLecturer(QSqlDatabase &db, int lecturerId)
 {
     return checkRole(db, lecturerId, QStringLiteral("LECTURER"),
-                     QStringLiteral("KhĂ´ng tĂ¬m tháº¥y giáº£ng viĂªn."),
-                     QStringLiteral("NgÆ°á»i Ä‘Æ°á»£c phĂ¢n cĂ´ng pháº£i lĂ  giáº£ng viĂªn."));
+                     QStringLiteral("Lecturer not found."),
+                     QStringLiteral("Assigned user must have LECTURER role."));
 }
 
 ServiceResult checkStudent(QSqlDatabase &db, int studentId)
 {
     return checkRole(db, studentId, QStringLiteral("STUDENT"),
-                     QStringLiteral("KhĂ´ng tĂ¬m tháº¥y sinh viĂªn."),
-                     QStringLiteral("Chá»‰ cĂ³ thá»ƒ ghi danh tĂ i khoáº£n sinh viĂªn."));
+                     QStringLiteral("Student not found."),
+                     QStringLiteral("Can only enroll users with STUDENT role."));
 }
 
 qint64 lastInsertId(QSqlDatabase &db)
@@ -67,18 +67,18 @@ ServiceResult CourseService::createCourse(const QString &code, const QString &na
     const QString c = code.trimmed();
     const QString n = name.trimmed();
     if (c.isEmpty() || n.isEmpty())
-        return ServiceResult::failure(QStringLiteral("Vui lĂ²ng nháº­p mĂ£ vĂ  tĂªn mĂ´n há»c."));
+        return ServiceResult::failure(QStringLiteral("Course code and name cannot be empty."));
 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
+        return ServiceResult::failure(QStringLiteral("Cannot connect to database."));
 
     const ServiceResult lecturer = checkLecturer(db, lecturerId);
     if (!lecturer.ok)
         return lecturer;
 
     if (courseCodeTaken(db, c, 0))
-        return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
+        return ServiceResult::failure(QStringLiteral("Course code already exists."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral("INSERT INTO courses (code, name, user_id) VALUES (?, ?, ?)"));
@@ -87,11 +87,11 @@ ServiceResult CourseService::createCourse(const QString &code, const QString &na
     q.addBindValue(lecturerId);
     if (!q.exec()) {
         if (isDuplicateKeyError(q.lastError()))
-            return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
-        qWarning() << "createCourse tháº¥t báº¡i:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ táº¡o mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
+            return ServiceResult::failure(QStringLiteral("Course code already exists."));
+        qWarning() << "createCourse failed:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("Failed to create course. Please try again."));
     }
-    return ServiceResult::success(QStringLiteral("Táº¡o mĂ´n há»c thĂ nh cĂ´ng."), lastInsertId(db));
+    return ServiceResult::success(QStringLiteral("Course created successfully."), lastInsertId(db));
 }
 
 ServiceResult CourseService::updateCourse(int courseId, const QString &code,
@@ -100,16 +100,16 @@ ServiceResult CourseService::updateCourse(int courseId, const QString &code,
     const QString c = code.trimmed();
     const QString n = name.trimmed();
     if (c.isEmpty() || n.isEmpty())
-        return ServiceResult::failure(QStringLiteral("Vui lĂ²ng nháº­p mĂ£ vĂ  tĂªn mĂ´n há»c."));
+        return ServiceResult::failure(QStringLiteral("Course code and name cannot be empty."));
 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
+        return ServiceResult::failure(QStringLiteral("Cannot connect to database."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
+        return ServiceResult::failure(QStringLiteral("Course not found."));
     if (courseCodeTaken(db, c, courseId))
-        return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
+        return ServiceResult::failure(QStringLiteral("Course code already exists."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral("UPDATE courses SET code = ?, name = ? WHERE course_id = ?"));
@@ -118,21 +118,21 @@ ServiceResult CourseService::updateCourse(int courseId, const QString &code,
     q.addBindValue(courseId);
     if (!q.exec()) {
         if (isDuplicateKeyError(q.lastError()))
-            return ServiceResult::failure(QStringLiteral("MĂ£ mĂ´n há»c Ä‘Ă£ tá»“n táº¡i."));
-        qWarning() << "updateCourse tháº¥t báº¡i:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ cáº­p nháº­t mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
+            return ServiceResult::failure(QStringLiteral("Course code already exists."));
+        qWarning() << "updateCourse failed:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("Failed to update course. Please try again."));
     }
-    return ServiceResult::success(QStringLiteral("Cáº­p nháº­t mĂ´n há»c thĂ nh cĂ´ng."), courseId);
+    return ServiceResult::success(QStringLiteral("Course updated successfully."), courseId);
 }
 
 ServiceResult CourseService::assignLecturer(int courseId, int lecturerId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
+        return ServiceResult::failure(QStringLiteral("Cannot connect to database."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
+        return ServiceResult::failure(QStringLiteral("Course not found."));
 
     const ServiceResult lecturer = checkLecturer(db, lecturerId);
     if (!lecturer.ok)
@@ -143,30 +143,30 @@ ServiceResult CourseService::assignLecturer(int courseId, int lecturerId)
     q.addBindValue(lecturerId);
     q.addBindValue(courseId);
     if (!q.exec()) {
-        qWarning() << "assignLecturer tháº¥t báº¡i:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ phĂ¢n cĂ´ng giáº£ng viĂªn. Vui lĂ²ng thá»­ láº¡i."));
+        qWarning() << "assignLecturer failed:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("Failed to assign lecturer. Please try again."));
     }
-    return ServiceResult::success(QStringLiteral("ÄĂ£ phĂ¢n cĂ´ng giáº£ng viĂªn."), courseId);
+    return ServiceResult::success(QStringLiteral("Lecturer assigned successfully."), courseId);
 }
 
 ServiceResult CourseService::deleteCourse(int courseId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
+        return ServiceResult::failure(QStringLiteral("Cannot connect to database."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
+        return ServiceResult::failure(QStringLiteral("Course not found."));
 
     const QString blocked = QStringLiteral(
-        "KhĂ´ng thá»ƒ xĂ³a mĂ´n há»c Ä‘Ă£ cĂ³ phiĂªn Ä‘iá»ƒm danh trong há»‡ thá»‘ng.");
+        "Cannot delete a course that already has attendance sessions recorded.");
 
     QSqlQuery count(db);
     count.prepare(QStringLiteral(
         "SELECT COUNT(*) FROM attendance_sessions WHERE course_id = ?"));
     count.addBindValue(courseId);
     if (!count.exec() || !count.next())
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng kiá»ƒm tra Ä‘Æ°á»£c dá»¯ liá»‡u Ä‘iá»ƒm danh. Vui lĂ²ng thá»­ láº¡i."));
+        return ServiceResult::failure(QStringLiteral("Failed to check attendance sessions. Please try again."));
     if (count.value(0).toInt() > 0)
         return ServiceResult::failure(blocked);
 
@@ -176,20 +176,20 @@ ServiceResult CourseService::deleteCourse(int courseId)
     if (!q.exec()) {
         if (isForeignKeyError(q.lastError()))
             return ServiceResult::failure(blocked);
-        qWarning() << "deleteCourse tháº¥t báº¡i:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ xĂ³a mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
+        qWarning() << "deleteCourse failed:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("Failed to delete course. Please try again."));
     }
-    return ServiceResult::success(QStringLiteral("ÄĂ£ xĂ³a mĂ´n há»c."), courseId);
+    return ServiceResult::success(QStringLiteral("Course deleted successfully."), courseId);
 }
 
 ServiceResult CourseService::enrollStudent(int courseId, int studentId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
+        return ServiceResult::failure(QStringLiteral("Cannot connect to database."));
 
     if (!courseExists(db, courseId))
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c."));
+        return ServiceResult::failure(QStringLiteral("Course not found."));
 
     const ServiceResult student = checkStudent(db, studentId);
     if (!student.ok)
@@ -201,7 +201,7 @@ ServiceResult CourseService::enrollStudent(int courseId, int studentId)
     dup.addBindValue(studentId);
     dup.addBindValue(courseId);
     if (dup.exec() && dup.next())
-        return ServiceResult::failure(QStringLiteral("Sinh viĂªn Ä‘Ă£ cĂ³ trong mĂ´n há»c nĂ y."));
+        return ServiceResult::failure(QStringLiteral("Student is already enrolled in this course."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral(
@@ -210,18 +210,18 @@ ServiceResult CourseService::enrollStudent(int courseId, int studentId)
     q.addBindValue(courseId);
     if (!q.exec()) {
         if (isDuplicateKeyError(q.lastError()))
-            return ServiceResult::failure(QStringLiteral("Sinh viĂªn Ä‘Ă£ cĂ³ trong mĂ´n há»c nĂ y."));
-        qWarning() << "enrollStudent tháº¥t báº¡i:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ thĂªm sinh viĂªn vĂ o mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
+            return ServiceResult::failure(QStringLiteral("Student is already enrolled in this course."));
+        qWarning() << "enrollStudent failed:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("Failed to enroll student. Please try again."));
     }
-    return ServiceResult::success(QStringLiteral("ÄĂ£ thĂªm sinh viĂªn vĂ o mĂ´n há»c."), lastInsertId(db));
+    return ServiceResult::success(QStringLiteral("Student enrolled successfully."), lastInsertId(db));
 }
 
 ServiceResult CourseService::unenrollStudent(int courseId, int studentId)
 {
     QSqlDatabase db = serviceDb();
     if (!db.isOpen())
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c cÆ¡ sá»Ÿ dá»¯ liá»‡u."));
+        return ServiceResult::failure(QStringLiteral("Cannot connect to database."));
 
     QSqlQuery find(db);
     find.prepare(QStringLiteral(
@@ -229,7 +229,7 @@ ServiceResult CourseService::unenrollStudent(int courseId, int studentId)
     find.addBindValue(studentId);
     find.addBindValue(courseId);
     if (!find.exec() || !find.next())
-        return ServiceResult::failure(QStringLiteral("Sinh viĂªn chÆ°a ghi danh vĂ o mĂ´n há»c nĂ y."));
+        return ServiceResult::failure(QStringLiteral("Student is not enrolled in this course."));
 
     QSqlQuery q(db);
     q.prepare(QStringLiteral(
@@ -237,8 +237,8 @@ ServiceResult CourseService::unenrollStudent(int courseId, int studentId)
     q.addBindValue(studentId);
     q.addBindValue(courseId);
     if (!q.exec()) {
-        qWarning() << "unenrollStudent tháº¥t báº¡i:" << q.lastError().text();
-        return ServiceResult::failure(QStringLiteral("KhĂ´ng thá»ƒ xĂ³a sinh viĂªn khá»i mĂ´n há»c. Vui lĂ²ng thá»­ láº¡i."));
+        qWarning() << "unenrollStudent failed:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("Failed to unenroll student. Please try again."));
     }
-    return ServiceResult::success(QStringLiteral("ÄĂ£ xĂ³a sinh viĂªn khá»i mĂ´n há»c."));
+    return ServiceResult::success(QStringLiteral("Student unenrolled successfully."));
 }
