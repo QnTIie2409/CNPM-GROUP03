@@ -51,7 +51,7 @@ std::vector<AttendanceRecord> AttendanceRepository::findBySession(int sessionId)
 std::vector<AttendanceRecord> AttendanceRepository::findByStudentAndCourse(int studentUserId, int courseId) {
     std::vector<AttendanceRecord> list;
     QSqlQuery query(DatabaseManager::instance().getDatabase());
-    query.prepare("SELECT r.record_id, r.session_id, r.user_id, r.status, r.check_in_time "
+    query.prepare("SELECT r.record_id, r.session_id, r.user_id, r.status, r.check_in_time, s.start_time "
                   "FROM attendance_records r "
                   "JOIN attendance_sessions s ON r.session_id = s.session_id "
                   "WHERE r.user_id = :uid AND s.course_id = :cid ORDER BY s.start_time DESC");
@@ -65,6 +65,7 @@ std::vector<AttendanceRecord> AttendanceRepository::findByStudentAndCourse(int s
             r.studentUserId = query.value("user_id").toInt();
             r.status = AttendanceRecord::stringToStatus(query.value("status").toString());
             r.checkInTime = query.value("check_in_time").toDateTime();
+            r.sessionStartTime = query.value("start_time").toDateTime();
             list.push_back(r);
         }
     }

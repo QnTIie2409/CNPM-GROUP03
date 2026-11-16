@@ -25,6 +25,10 @@ CourseAttendanceStats AttendanceService::getStudentStats(int studentUserId, int 
     return stats;
 }
 
+std::vector<AttendanceRecord> AttendanceService::getStudentRecords(int studentUserId, int courseId) {
+    return m_attendanceRepo.findByStudentAndCourse(studentUserId, courseId);
+}
+
 std::vector<AttendanceRecord> AttendanceService::getSessionRecords(int sessionId) {
     return m_attendanceRepo.findBySession(sessionId);
 }

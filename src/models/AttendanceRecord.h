@@ -19,6 +19,7 @@ struct AttendanceRecord {
     QString studentName;
     AttendanceStatus status = AttendanceStatus::ABSENT;
     QDateTime checkInTime;
+    QDateTime sessionStartTime;
 
     static QString statusToString(AttendanceStatus s) {
         switch (s) {

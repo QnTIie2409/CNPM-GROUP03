@@ -16,6 +16,8 @@ public:
 
     // Them mot trang vao menu ben trai (trang dau tien duoc chon san)
     void addPage(const QString &navText, QWidget *page);
+    void setCurrentPage(const QString &navText);
+    void setCurrentPage(int index);
 
 signals:
     void signOutRequested();

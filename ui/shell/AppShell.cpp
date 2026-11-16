@@ -200,3 +200,19 @@ void AppShell::showPage(int index) {
     m_stack->setCurrentIndex(index);
     m_breadcrumb->setText("Academic operations / " + m_titles.value(index));
 }
+
+void AppShell::setCurrentPage(int index) {
+    if (index >= 0 && index < m_titles.size()) {
+        if (auto *btn = m_navGroup->button(index)) {
+            btn->setChecked(true);
+        }
+        showPage(index);
+    }
+}
+
+void AppShell::setCurrentPage(const QString &navText) {
+    const int idx = m_titles.indexOf(navText);
+    if (idx != -1) {
+        setCurrentPage(idx);
+    }
+}
