@@ -1,9 +1,7 @@
-﻿#include "loginwindow.h"
+#include "../ui/UiLauncher.h"
 #include "repositories/DatabaseManager.h"
 #include "utils/Logger.h"
 #include <QApplication>
-#include <QFile>
-#include <QFileInfo>
 
 int main(int argc, char *argv[])
 {
@@ -14,17 +12,7 @@ int main(int argc, char *argv[])
 
     DatabaseManager::instance().initFromConfig();
 
-    QString stylePath = "resources/style.qss";
-    if (!QFileInfo::exists(stylePath)) {
-        stylePath = a.applicationDirPath() + "/resources/style.qss";
-    }
-    QFile styleFile(stylePath);
-    if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
-        a.setStyleSheet(styleFile.readAll());
-        styleFile.close();
-    }
-
-    LoginWindow w;
-    w.show();
+    UiLauncher launcher;
+    launcher.start();
     return a.exec();
 }

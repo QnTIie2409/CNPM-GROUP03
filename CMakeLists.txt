@@ -15,7 +15,7 @@ else()
 endif()
 
 # Network: cần cho QPasswordDigestor (băm mật khẩu PBKDF2 trong AuthService)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Sql Network Svg)
 
 # Danh sách mã nguồn dự án theo cấu trúc 3 tầng
 set(SOURCES
@@ -25,14 +25,19 @@ set(SOURCES
     src/utils/Logger.h
     src/utils/Logger.cpp
 
-    # Views / Screens
+    # Application entry point and integrated UI shell
     src/main.cpp
-    src/LoginWindow.ui
-    src/loginwindow.h
-    src/loginwindow.cpp
-    src/mainwindow.ui
-    src/mainwindow.h
-    src/mainwindow.cpp
+    ui/UiLauncher.h
+    ui/UiLauncher.cpp
+    ui/LoginWindow.ui
+    ui/LoginWindow.h
+    ui/LoginWindow.cpp
+    ui/shell/AppShell.h
+    ui/shell/AppShell.cpp
+    ui/MiniCalendarWidget.h
+    ui/MiniCalendarWidget.cpp
+    ui/WeeklyTimetableWidget.h
+    ui/WeeklyTimetableWidget.cpp
 
     # Models
     src/models/User.h
@@ -72,6 +77,8 @@ set(SOURCES
     src/services/AttendanceService.cpp
     src/services/TimetableService.h
     src/services/TimetableService.cpp
+
+    ui/resources/resources.qrc
 )
 
 add_executable(StudentAttendanceSystem ${SOURCES})
@@ -81,4 +88,5 @@ target_link_libraries(StudentAttendanceSystem PRIVATE
     Qt6::Widgets
     Qt6::Sql
     Qt6::Network
+    Qt6::Svg
 )

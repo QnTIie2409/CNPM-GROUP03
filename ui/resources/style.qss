@@ -221,3 +221,92 @@ QMessageBox QPushButton {
 QMessageBox QPushButton:hover {
     background-color: #163F7A;
 }
+
+/* ===== MINI CALENDAR (Bản nhỏ - Overview) ===== */
+QWidget#miniCalendarCard {
+    background-color: #FFFFFF;
+    border: 1px solid #DDE3EC;
+    border-radius: 16px;
+}
+
+QLabel#miniCalTitle {
+    color: #0D7377;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+QPushButton#miniCalNavBtn {
+    background-color: transparent;
+    color: #475569;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    padding: 0;
+}
+QPushButton#miniCalNavBtn:hover {
+    background-color: #F1F5F9;
+    color: #0D7377;
+}
+
+QLabel#miniCalMonthBadge {
+    color: #334155;
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QLabel#miniCalColHeaderSun {
+    color: #EA580C;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 0;
+}
+
+QLabel#miniCalColHeader {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 0;
+}
+
+QFrame#miniCalDivider {
+    color: #E2E8F0;
+    background-color: #E2E8F0;
+    max-height: 1px;
+}
+
+/* ===== CARDS & WIDGETS IN OVERVIEW ===== */
+QFrame#overviewCard {
+    background-color: #FFFFFF;
+    border: 1px solid #DDE3EC;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+QLabel#overviewCardTitle {
+    color: #112D55;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+QLabel#overviewCardSubtitle {
+    color: #64748B;
+    font-size: 13px;
+}
+
+QFrame#scheduleItemCard {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-left: 4px solid #0D7377;
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+QFrame#scheduleItemCard:hover {
+    background-color: #F1F5F9;
+}
+

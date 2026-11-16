@@ -4,6 +4,7 @@
 #include <QPasswordDigestor>
 #include <QRandomGenerator>
 #include <QStringList>
+#include "../repositories/DatabaseManager.h"
 
 namespace {
 
@@ -84,6 +85,11 @@ bool AuthService::verifyPassword(const QString& password, const QString& storedH
 
 bool AuthService::login(const QString& email, const QString& password) {
     m_lastError.clear();
+
+    if (!DatabaseManager::instance().isConnected()) {
+        m_lastError = QStringLiteral("Cannot connect to the database. Please start MySQL and try again.");
+        return false;
+    }
 
     const QString genericError = QStringLiteral("Invalid username or password.");
 

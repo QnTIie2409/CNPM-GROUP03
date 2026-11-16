@@ -1,1 +1,9 @@
-<RCC/>
+<!DOCTYPE RCC><RCC version="1.0">
+  <qresource prefix="/">
+    <file alias="style.qss">style.qss</file>
+    <file alias="icons/arrow-right.svg">icons/arrow-right.svg</file>
+    <file alias="icons/eye.svg">icons/eye.svg</file>
+    <file alias="icons/eye-off.svg">icons/eye-off.svg</file>
+    <file alias="icons/info.svg">icons/info.svg</file>
+  </qresource>
+</RCC>
