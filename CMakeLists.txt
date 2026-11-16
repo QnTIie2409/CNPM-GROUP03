@@ -70,6 +70,8 @@ set(SOURCES
     src/services/CheckInService.cpp
     src/services/AttendanceService.h
     src/services/AttendanceService.cpp
+    src/services/TimetableService.h
+    src/services/TimetableService.cpp
 )
 
 add_executable(StudentAttendanceSystem ${SOURCES})
