@@ -8,6 +8,7 @@
 SessionService::SessionService() {
     m_timer = new QTimer(this);
     connect(m_timer, &QTimer::timeout, this, &SessionService::onRotateCode);
+    m_timer->setInterval(1000);
 }
 
 SessionService& SessionService::instance() {
@@ -29,6 +30,10 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
     QSqlDatabase db = serviceDb();
     if (!db.isOpen()) {
         return ServiceResult::failure("Cannot connect to database.");
+    }
+
+    if (!m_sessionRepo.lecturerTeachesCourse(lecturerUserId, courseId)) {
+        return ServiceResult::failure("This Lecturer is not assigned to the selected course.");
     }
 
     QSqlQuery checkQuery(db);
@@ -62,7 +67,8 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
     }
 
     m_activeSessionId = newSessionId;
-    m_timer->start(60000); 
+    if (!m_timer->isActive())
+        m_timer->start();
 
     return ServiceResult::success("Attendance session opened successfully! Initial code: " + code, newSessionId);
 }
@@ -115,7 +121,9 @@ ServiceResult SessionService::closeSession(int sessionId)
         return ServiceResult::failure("Failed to automatically mark absent for remaining students.");
     }
 
-    db.commit();
+    if (!db.commit()) {
+        return ServiceResult::failure("Failed to commit attendance session closure.");
+    }
 
     if (m_activeSessionId == sessionId) {
         m_timer->stop();
@@ -139,9 +147,34 @@ std::optional<AttendanceSession> SessionService::getSessionById(int sessionId) {
 }
 
 void SessionService::onRotateCode() {
-    if (m_activeSessionId > 0) {
-        QString newCode = generateRandomCode();
-        m_sessionRepo.updateSessionCode(m_activeSessionId, newCode);
-        emit codeRotated(m_activeSessionId, newCode);
+    const auto openSessions = m_sessionRepo.findOpenSessions();
+    if (openSessions.empty()) {
+        m_timer->stop();
+        m_activeSessionId = -1;
+        return;
+    }
+
+    for (const auto &session : openSessions) {
+        const qint64 elapsedSeconds = m_sessionRepo.serverSecondsSince(session.startTime);
+        if (elapsedSeconds < 0)
+            continue;
+        if (elapsedSeconds >= static_cast<qint64>(session.durationMinutes) * 60) {
+            closeSession(session.sessionId);
+            continue;
+        }
+
+        const qint64 codeAge = m_sessionRepo.serverSecondsSince(session.codeGeneratedAt);
+        if (codeAge < 0)
+            continue;
+        if (codeAge >= 60) {
+            const QString newCode = generateRandomCode();
+            if (m_sessionRepo.updateSessionCode(session.sessionId, newCode))
+                emit codeRotated(session.sessionId, newCode);
+        }
+    }
+
+    if (m_sessionRepo.findOpenSessions().empty()) {
+        m_timer->stop();
+        m_activeSessionId = -1;
     }
 }

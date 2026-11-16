@@ -32,13 +32,16 @@ INSERT INTO enrollments (enrollment_id, user_id, course_id, enrolled_at) VALUES
 (6, 5, 2, '2026-09-01');
 
 -- 4. Nạp thời khóa biểu (schedule_entries)
+-- Mỗi môn học kéo dài khoảng 8-9 tuần (~2 tháng)
+-- Course 1 (Transport Planning): Học từ 05/10/2026 đến 30/11/2026
+-- Course 2 (Applied Mathematics): Học từ 02/11/2026 đến 31/12/2026
 INSERT INTO schedule_entries (schedule_id, course_id, type, day_of_week, start_time, end_time, room, start_date, end_date) VALUES
-(1, 1, 'CLASS', 1, '08:00:00', '09:30:00', 'B.402', '2026-09-01', '2026-12-30'),
-(2, 1, 'CLASS', 3, '13:00:00', '14:30:00', 'B.405', '2026-09-01', '2026-12-30'),
-(3, 2, 'CLASS', 1, '10:00:00', '11:30:00', 'A.203', '2026-09-01', '2026-12-30'),
-(4, 2, 'CLASS', 4, '14:55:00', '17:15:00', 'B.301', '2026-09-01', '2026-12-30'),
-(5, 1, 'CLASS', 5, '09:25:00', '11:55:00', 'E.301', '2026-09-01', '2026-12-30'),
-(6, 2, 'CLASS', 3, '09:25:00', '11:55:00', 'C.202', '2026-09-01', '2026-12-30');
+(1, 1, 'CLASS', 1, '08:00:00', '09:30:00', 'B.402', '2026-10-05', '2026-11-30'),
+(2, 1, 'CLASS', 3, '13:00:00', '14:30:00', 'B.405', '2026-10-05', '2026-11-30'),
+(3, 2, 'CLASS', 1, '10:00:00', '11:30:00', 'A.203', '2026-11-02', '2026-12-31'),
+(4, 2, 'CLASS', 4, '14:55:00', '17:15:00', 'B.301', '2026-11-02', '2026-12-31'),
+(5, 1, 'CLASS', 5, '09:25:00', '11:55:00', 'E.301', '2026-10-05', '2026-11-30'),
+(6, 2, 'CLASS', 3, '09:25:00', '11:55:00', 'C.202', '2026-11-02', '2026-12-31');
 
 -- 5. Nạp phiên điểm danh đang mở thử nghiệm (attendance_sessions)
 INSERT INTO attendance_sessions (session_id, course_id, user_id, start_time, duration_minutes, present_window_minutes, late_window_minutes, session_code, code_generated_at, status) VALUES

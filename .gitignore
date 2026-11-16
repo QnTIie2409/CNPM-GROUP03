@@ -46,6 +46,7 @@ qrc_*.cpp
 *.suo
 *.userosv
 *.sln.docstates
+API_CONTRACT.md
 
 # Database & local logs
 *.db

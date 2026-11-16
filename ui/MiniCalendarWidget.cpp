@@ -155,31 +155,12 @@ void MiniCalendarWidget::updateCalendar() {
         auto *btn = new QPushButton;
         btn->setCursor(Qt::PointingHandCursor);
         btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        btn->setFixedHeight(38);
+        btn->setFixedHeight(36);
 
-        // Build HTML text with day number and dot indicators
-        QString dotHtml = "";
-        if (classCount == 1) {
-            dotHtml = "<br><span style='color:#16A34A; font-size:14px; line-height:8px;'>•</span>";
-        } else if (classCount == 2) {
-            dotHtml = "<br><span style='color:#0D9488; font-size:14px; line-height:8px;'>••</span>";
-        } else if (classCount > 2) {
-            dotHtml = "<br><span style='color:#EA580C; font-size:14px; line-height:8px;'>•••</span>";
-        }
-
-        const QString numColor = isSunday ? "#EA580C" : "#1E293B";
-        btn->setText(QString::number(day));
-
-        // Styling based on state
+        // Styling based on state (Soft Cyan / Teal)
         QString style = "QPushButton { border-radius: 8px; font-weight: 600; font-size: 13px; ";
-        if (isSunday) {
-            style += "color: #EA580C; ";
-        } else {
-            style += "color: #1E293B; ";
-        }
-
         if (classCount > 0) {
-            style += "background-color: #B5E2E0; ";
+            style += "background-color: #CCFBF1; "; // Soft cyan
         } else {
             style += "background-color: transparent; ";
         }
@@ -192,15 +173,20 @@ void MiniCalendarWidget::updateCalendar() {
             style += "border: 1px solid transparent; ";
         }
 
-        style += "} QPushButton:hover { background-color: #99D5D3; }";
+        if (classCount > 0) {
+            style += "} QPushButton:hover { background-color: #99F6E4; }";
+        } else {
+            style += "} QPushButton:hover { background-color: #F1F5F9; }";
+        }
         btn->setStyleSheet(style);
 
-        // Put a small container with day number & dot
+        // Put clean child labels for day number & dot indicator (NO btn->setText to avoid double-text overlap)
         auto *dayLayout = new QVBoxLayout(btn);
-        dayLayout->setContentsMargins(0, 3, 0, 2);
+        dayLayout->setContentsMargins(0, 2, 0, 2);
         dayLayout->setSpacing(0);
         dayLayout->setAlignment(Qt::AlignCenter);
 
+        const QString numColor = isSunday ? "#EA580C" : (classCount > 0 ? "#0F766E" : "#1E293B");
         auto *lblNum = new QLabel(QString::number(day));
         lblNum->setAlignment(Qt::AlignCenter);
         lblNum->setStyleSheet(QString("color: %1; font-weight: 600; font-size: 13px; background: transparent; border: none;").arg(numColor));
@@ -211,16 +197,16 @@ void MiniCalendarWidget::updateCalendar() {
         lblDot->setStyleSheet("background: transparent; border: none;");
         if (classCount == 1) {
             lblDot->setText("•");
-            lblDot->setStyleSheet("color: #16A34A; font-size: 15px; font-weight: bold; background: transparent; border: none; margin-top: -6px;");
+            lblDot->setStyleSheet("color: #10B981; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
         } else if (classCount == 2) {
             lblDot->setText("••");
-            lblDot->setStyleSheet("color: #0D9488; font-size: 15px; font-weight: bold; background: transparent; border: none; margin-top: -6px;");
+            lblDot->setStyleSheet("color: #0D9488; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
         } else if (classCount > 2) {
             lblDot->setText("•••");
-            lblDot->setStyleSheet("color: #EA580C; font-size: 15px; font-weight: bold; background: transparent; border: none; margin-top: -6px;");
+            lblDot->setStyleSheet("color: #0284C7; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
         } else {
             lblDot->setText(" ");
-            lblDot->setFixedHeight(6);
+            lblDot->setFixedHeight(4);
         }
         dayLayout->addWidget(lblDot);
 
