@@ -36,7 +36,7 @@ AppShell::AppShell(Role role, const QString &userName, QWidget *parent)
     auto *right = new QVBoxLayout;
     right->setSpacing(0);
     right->setContentsMargins(0, 0, 0, 0);
-    right->addWidget(buildTopBar(userName));
+    right->addWidget(buildTopBar(role, userName));
     right->addWidget(m_stack, 1);
     right->addWidget(buildFooter());
 
@@ -108,10 +108,10 @@ QWidget *AppShell::buildSidebar(Role role) {
     return side;
 }
 
-QWidget *AppShell::buildTopBar(const QString &userName) {
+QWidget *AppShell::buildTopBar(Role role, const QString &userName) {
     auto *bar = new QFrame;
     bar->setObjectName("topBar");
-    bar->setFixedHeight(64);
+    bar->setFixedHeight(68);
     auto *lay = new QHBoxLayout(bar);
     lay->setContentsMargins(24, 0, 24, 0);
 
@@ -120,28 +120,39 @@ QWidget *AppShell::buildTopBar(const QString &userName) {
     lay->addStretch();
 
     auto *userBox = new QVBoxLayout;
-    userBox->setSpacing(0);
-    userBox->addWidget(makeLabel(userName, "userName"));
+    userBox->setSpacing(3);
+    userBox->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    auto *nameLabel = makeLabel(userName, "userName");
+    nameLabel->setAlignment(Qt::AlignRight);
+    userBox->addWidget(nameLabel);
+
     auto *links = new QHBoxLayout;
-    links->setSpacing(10);
+    links->setSpacing(8);
+    links->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    const QString roleText = (role == Role::Admin) ? "ADMIN" : (role == Role::Lecturer ? "LECTURER" : "STUDENT");
+    auto *roleBadge = makeLabel(roleText, "userRoleBadge");
+    links->addWidget(roleBadge);
+
     auto *btnPw = new QPushButton("Change password");
     btnPw->setObjectName("linkPrimary");
     btnPw->setFlat(true);
     btnPw->setCursor(Qt::PointingHandCursor);
-    auto *btnOut = new QPushButton("Sign out");
-    btnOut->setObjectName("linkMuted");
-    btnOut->setFlat(true);
-    btnOut->setCursor(Qt::PointingHandCursor);
     links->addWidget(btnPw);
+
+    auto *btnOut = new QPushButton("Sign out");
+    btnOut->setObjectName("btnTopSignOut");
+    btnOut->setCursor(Qt::PointingHandCursor);
     links->addWidget(btnOut);
-    links->addStretch();
+
     userBox->addLayout(links);
     lay->addLayout(userBox);
 
     auto *avatar = makeLabel(initialsOf(userName), "avatar");
-    avatar->setFixedSize(36, 36);
+    avatar->setFixedSize(38, 38);
     avatar->setAlignment(Qt::AlignCenter);
-    lay->addSpacing(12);
+    lay->addSpacing(10);
     lay->addWidget(avatar);
 
     connect(btnPw, &QPushButton::clicked, this, &AppShell::changePasswordRequested);

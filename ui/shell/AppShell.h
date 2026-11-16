@@ -23,7 +23,7 @@ signals:
 
 private:
     QWidget *buildSidebar(Role role);
-    QWidget *buildTopBar(const QString &userName);
+    QWidget *buildTopBar(Role role, const QString &userName);
     QWidget *buildFooter();
     void showPage(int index);
 
