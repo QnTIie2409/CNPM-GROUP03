@@ -36,11 +36,14 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
         return ServiceResult::failure("This Lecturer is not assigned to the selected course.");
     }
 
-    QSqlQuery checkQuery(db);
-    checkQuery.prepare("SELECT session_id FROM attendance_sessions WHERE course_id = ? AND status = 'OPEN' LIMIT 1");
-    checkQuery.addBindValue(courseId);
-    if (checkQuery.exec() && checkQuery.next()) {
-        return ServiceResult::failure("An attendance session is already open for this course!");
+    const auto existing = m_sessionRepo.findOpenSessionForCourse(courseId);
+    if (existing.has_value()) {
+        const qint64 elapsed = m_sessionRepo.serverSecondsSince(existing->startTime);
+        if (elapsed >= 0 && elapsed >= static_cast<qint64>(existing->durationMinutes) * 60) {
+            closeSession(existing->sessionId);
+        } else {
+            return ServiceResult::failure("An attendance session is already open for this course!");
+        }
     }
     QString code = generateRandomCode();
 
@@ -139,7 +142,16 @@ ServiceResult SessionService::closeSession(int sessionId)
 }
 
 std::optional<AttendanceSession> SessionService::getOpenSession(int courseId) {
-    return m_sessionRepo.findOpenSessionForCourse(courseId);
+    const auto session = m_sessionRepo.findOpenSessionForCourse(courseId);
+    if (!session.has_value())
+        return std::nullopt;
+
+    const qint64 elapsed = m_sessionRepo.serverSecondsSince(session->startTime);
+    if (elapsed >= 0 && elapsed >= static_cast<qint64>(session->durationMinutes) * 60) {
+        closeSession(session->sessionId);
+        return std::nullopt;
+    }
+    return session;
 }
 
 std::optional<AttendanceSession> SessionService::getSessionById(int sessionId) {
