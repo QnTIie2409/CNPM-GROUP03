@@ -157,24 +157,24 @@ void MiniCalendarWidget::updateCalendar() {
         btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         btn->setFixedHeight(36);
 
-        // Styling based on state (Soft Cyan / Teal)
+        // Styling based on state (Soft Sky / Cyan Blue)
         QString style = "QPushButton { border-radius: 8px; font-weight: 600; font-size: 13px; ";
         if (classCount > 0) {
-            style += "background-color: #CCFBF1; "; // Soft cyan
+            style += "background-color: #E0F2FE; "; // Soft sky cyan-blue
         } else {
             style += "background-color: transparent; ";
         }
 
         if (isToday) {
-            style += "border: 2px solid #0D7377; ";
+            style += "border: 2px solid #1B4F96; ";
         } else if (isSelected) {
-            style += "border: 2px dashed #0D7377; ";
+            style += "border: 2px dashed #0284C7; ";
         } else {
             style += "border: 1px solid transparent; ";
         }
 
         if (classCount > 0) {
-            style += "} QPushButton:hover { background-color: #99F6E4; }";
+            style += "} QPushButton:hover { background-color: #BAE6FD; }";
         } else {
             style += "} QPushButton:hover { background-color: #F1F5F9; }";
         }
@@ -186,7 +186,7 @@ void MiniCalendarWidget::updateCalendar() {
         dayLayout->setSpacing(0);
         dayLayout->setAlignment(Qt::AlignCenter);
 
-        const QString numColor = isSunday ? "#EA580C" : (classCount > 0 ? "#0F766E" : "#1E293B");
+        const QString numColor = isSunday ? "#EA580C" : (classCount > 0 ? "#0369A1" : "#1E293B");
         auto *lblNum = new QLabel(QString::number(day));
         lblNum->setAlignment(Qt::AlignCenter);
         lblNum->setStyleSheet(QString("color: %1; font-weight: 600; font-size: 13px; background: transparent; border: none;").arg(numColor));
@@ -197,13 +197,13 @@ void MiniCalendarWidget::updateCalendar() {
         lblDot->setStyleSheet("background: transparent; border: none;");
         if (classCount == 1) {
             lblDot->setText("•");
-            lblDot->setStyleSheet("color: #10B981; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
+            lblDot->setStyleSheet("color: #0284C7; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
         } else if (classCount == 2) {
             lblDot->setText("••");
-            lblDot->setStyleSheet("color: #0D9488; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
+            lblDot->setStyleSheet("color: #2563EB; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
         } else if (classCount > 2) {
             lblDot->setText("•••");
-            lblDot->setStyleSheet("color: #0284C7; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
+            lblDot->setStyleSheet("color: #1D4ED8; font-size: 13px; font-weight: bold; background: transparent; border: none; margin-top: -4px;");
         } else {
             lblDot->setText(" ");
             lblDot->setFixedHeight(4);

@@ -208,7 +208,7 @@ QWidget *lecturerOverviewPage(int userId) {
             sLayout->addWidget(cTitle);
 
             auto *codeLbl = new QLabel(QString("Mã điểm danh hiện tại: %1 (tự đổi sau mỗi 60s)").arg(open->sessionCode));
-            codeLbl->setStyleSheet("color: #0D7377; font-weight: bold; font-size: 14px; background: transparent;");
+            codeLbl->setStyleSheet("color: #1B4F96; font-weight: bold; font-size: 14px; background: transparent;");
             sLayout->addWidget(codeLbl);
 
             sessionLayout->addWidget(sBox);

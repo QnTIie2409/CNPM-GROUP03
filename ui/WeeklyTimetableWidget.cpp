@@ -31,7 +31,7 @@ WeeklyTimetableWidget::WeeklyTimetableWidget(QWidget *parent)
     m_dateEdit->setFixedWidth(140);
     m_dateEdit->setStyleSheet(
         "QDateEdit {"
-        "  border: 1px solid #0D7377;"
+        "  border: 1px solid #1B4F96;"
         "  border-radius: 6px;"
         "  padding: 4px 10px;"
         "  font-weight: 600;"
@@ -50,14 +50,14 @@ WeeklyTimetableWidget::WeeklyTimetableWidget(QWidget *parent)
     btnPrev->setFixedSize(38, 36);
     btnPrev->setStyleSheet(
         "QPushButton {"
-        "  background-color: #00796B;"
+        "  background-color: #1B4F96;"
         "  color: #FFFFFF;"
         "  font-weight: bold;"
         "  font-size: 15px;"
         "  border: none;"
         "  border-radius: 6px;"
         "}"
-        "QPushButton:hover { background-color: #005F54; }"
+        "QPushButton:hover { background-color: #163F7A; }"
     );
     connect(btnPrev, &QPushButton::clicked, this, &WeeklyTimetableWidget::onPrevWeek);
     topBar->addWidget(btnPrev);
@@ -67,7 +67,7 @@ WeeklyTimetableWidget::WeeklyTimetableWidget(QWidget *parent)
     btnCurrent->setFixedHeight(36);
     btnCurrent->setStyleSheet(
         "QPushButton {"
-        "  background-color: #00796B;"
+        "  background-color: #1B4F96;"
         "  color: #FFFFFF;"
         "  font-weight: bold;"
         "  font-size: 13px;"
@@ -75,7 +75,7 @@ WeeklyTimetableWidget::WeeklyTimetableWidget(QWidget *parent)
         "  border: none;"
         "  border-radius: 6px;"
         "}"
-        "QPushButton:hover { background-color: #005F54; }"
+        "QPushButton:hover { background-color: #163F7A; }"
     );
     connect(btnCurrent, &QPushButton::clicked, this, &WeeklyTimetableWidget::onCurrentWeek);
     topBar->addWidget(btnCurrent);
@@ -85,14 +85,14 @@ WeeklyTimetableWidget::WeeklyTimetableWidget(QWidget *parent)
     btnNext->setFixedSize(38, 36);
     btnNext->setStyleSheet(
         "QPushButton {"
-        "  background-color: #00796B;"
+        "  background-color: #1B4F96;"
         "  color: #FFFFFF;"
         "  font-weight: bold;"
         "  font-size: 15px;"
         "  border: none;"
         "  border-radius: 6px;"
         "}"
-        "QPushButton:hover { background-color: #005F54; }"
+        "QPushButton:hover { background-color: #163F7A; }"
     );
     connect(btnNext, &QPushButton::clicked, this, &WeeklyTimetableWidget::onNextWeek);
     topBar->addWidget(btnNext);
@@ -109,7 +109,7 @@ WeeklyTimetableWidget::WeeklyTimetableWidget(QWidget *parent)
     m_gridContainer->setStyleSheet(
         "QWidget#timetableContainer {"
         "  background-color: #FFFFFF;"
-        "  border: 1px solid #00796B;"
+        "  border: 1px solid #1B4F96;"
         "  border-radius: 8px;"
         "}"
     );
@@ -275,7 +275,7 @@ void WeeklyTimetableWidget::renderGrid() {
     lblCaHeader->setAlignment(Qt::AlignCenter);
     lblCaHeader->setFixedHeight(46);
     lblCaHeader->setStyleSheet(
-        "background-color: #00796B;"
+        "background-color: #1B4F96;"
         "color: #FFFFFF;"
         "font-weight: bold;"
         "font-size: 13px;"
@@ -298,7 +298,7 @@ void WeeklyTimetableWidget::renderGrid() {
         if (isToday) {
             style += "background-color: #F59E0B; "; // Highlight today in orange
         } else {
-            style += "background-color: #00796B; "; // Dark teal
+            style += "background-color: #1B4F96; "; // Primary UTH Blue
         }
         if (d == 6) {
             style += "border-top-right-radius: 7px; ";
@@ -318,11 +318,11 @@ void WeeklyTimetableWidget::renderGrid() {
     lblSang->setAlignment(Qt::AlignCenter);
     lblSang->setFixedWidth(65);
     lblSang->setStyleSheet(
-        "background-color: #00796B;"
+        "background-color: #1B4F96;"
         "color: #FFFFFF;"
         "font-weight: bold;"
         "font-size: 13px;"
-        "border-right: 1px solid #005F54;"
+        "border-right: 1px solid #163F7A;"
     );
     m_gridLayout->addWidget(lblSang, 1, 0, 2, 1);
 
@@ -331,11 +331,11 @@ void WeeklyTimetableWidget::renderGrid() {
     lblChieu->setAlignment(Qt::AlignCenter);
     lblChieu->setFixedWidth(65);
     lblChieu->setStyleSheet(
-        "background-color: #00796B;"
+        "background-color: #1B4F96;"
         "color: #FFFFFF;"
         "font-weight: bold;"
         "font-size: 13px;"
-        "border-right: 1px solid #005F54;"
+        "border-right: 1px solid #163F7A;"
         "border-bottom-left-radius: 7px;"
     );
     m_gridLayout->addWidget(lblChieu, 3, 0, 3, 1);
@@ -349,11 +349,11 @@ void WeeklyTimetableWidget::renderGrid() {
         lblCaItem->setAlignment(Qt::AlignCenter);
         lblCaItem->setFixedWidth(55);
         lblCaItem->setStyleSheet(
-            "background-color: #00796B;"
+            "background-color: #2058A8;"
             "color: #FFFFFF;"
             "font-weight: bold;"
             "font-size: 12px;"
-            "border-right: 1px solid #005F54;"
+            "border-right: 1px solid #163F7A;"
         );
         m_gridLayout->addWidget(lblCaItem, gridRow, 1);
 
@@ -370,7 +370,7 @@ void WeeklyTimetableWidget::renderGrid() {
 
             QString cellStyle = "border: 1px solid #E2E8F0; ";
             if (isToday) {
-                cellStyle += "background-color: #FFFBEB; "; // Light warm cream for today
+                cellStyle += "background-color: #EFF6FF; "; // Light soft ice blue for today
             } else {
                 cellStyle += "background-color: #FFFFFF; ";
             }

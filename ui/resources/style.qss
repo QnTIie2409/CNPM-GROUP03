@@ -230,7 +230,7 @@ QWidget#miniCalendarCard {
 }
 
 QLabel#miniCalTitle {
-    color: #0D7377;
+    color: #1B4F96;
     font-size: 16px;
     font-weight: 700;
 }
@@ -245,8 +245,8 @@ QPushButton#miniCalNavBtn {
     padding: 0;
 }
 QPushButton#miniCalNavBtn:hover {
-    background-color: #F1F5F9;
-    color: #0D7377;
+    background-color: #EFF6FF;
+    color: #1B4F96;
 }
 
 QLabel#miniCalMonthBadge {
@@ -301,7 +301,7 @@ QLabel#overviewCardSubtitle {
 QFrame#scheduleItemCard {
     background-color: #F8FAFC;
     border: 1px solid #E2E8F0;
-    border-left: 4px solid #0D7377;
+    border-left: 4px solid #1B4F96;
     border-radius: 8px;
     padding: 10px 14px;
 }
