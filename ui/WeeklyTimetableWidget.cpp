@@ -197,9 +197,14 @@ QWidget* WeeklyTimetableWidget::createCourseCard(const ScheduleEntry &entry, int
     card->setObjectName("timetableCourseCard");
     card->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
+    const bool isElearning = (entry.type == ScheduleType::STUDY);
+
     QString bgColor = "#EEF2FF";
     QString accentColor = "#3B82F6";
-    if (entry.courseId % 3 == 1) {
+    if (isElearning) {
+        bgColor = "#F0F9FF";
+        accentColor = "#0284C7";
+    } else if (entry.courseId % 3 == 1) {
         bgColor = "#EFF6FF";
         accentColor = "#2563EB";
     } else if (entry.courseId % 3 == 2) {
@@ -224,7 +229,8 @@ QWidget* WeeklyTimetableWidget::createCourseCard(const ScheduleEntry &entry, int
     layout->setContentsMargins(6, 6, 6, 6);
     layout->setSpacing(3);
 
-    auto *lblName = new QLabel(entry.courseName);
+    const QString displayName = isElearning ? (entry.courseName + " (E-learning)") : entry.courseName;
+    auto *lblName = new QLabel(displayName);
     lblName->setWordWrap(true);
     lblName->setStyleSheet("font-weight: 700; font-size: 11px; color: #1E293B; background: transparent;");
     layout->addWidget(lblName);
@@ -233,7 +239,8 @@ QWidget* WeeklyTimetableWidget::createCourseCard(const ScheduleEntry &entry, int
     lblCode->setStyleSheet("font-size: 10px; color: #64748B; background: transparent;");
     layout->addWidget(lblCode);
 
-    auto *lblPeriod = new QLabel("📗 " + getPeriodText(shiftIndex));
+    const QString periodStr = isElearning ? "💻 Tiết: 13 - 15 (E-learning)" : ("📗 " + getPeriodText(shiftIndex));
+    auto *lblPeriod = new QLabel(periodStr);
     lblPeriod->setStyleSheet("font-size: 10px; color: #334155; background: transparent;");
     layout->addWidget(lblPeriod);
 
@@ -247,13 +254,23 @@ QWidget* WeeklyTimetableWidget::createCourseCard(const ScheduleEntry &entry, int
     lblRoom->setStyleSheet("font-size: 10px; color: #334155; background: transparent;");
     layout->addWidget(lblRoom);
 
-    auto *lblNotes = new QLabel("📖 Đề cương chi tiết học phần");
-    lblNotes->setStyleSheet("font-size: 9px; color: #DC2626; background: transparent;");
-    layout->addWidget(lblNotes);
+    if (isElearning) {
+        auto *lblNotes = new QLabel("🌐 Tự học bài tập trên LMS");
+        lblNotes->setStyleSheet("font-size: 9px; color: #0284C7; font-weight: 600; background: transparent;");
+        layout->addWidget(lblNotes);
 
-    auto *lblLms = new QLabel("🎓 LMS");
-    lblLms->setStyleSheet("font-size: 9px; color: #DC2626; font-weight: bold; background: transparent;");
-    layout->addWidget(lblLms);
+        auto *lblLms = new QLabel("🎓 LMS UTH");
+        lblLms->setStyleSheet("font-size: 9px; color: #0284C7; font-weight: bold; background: transparent;");
+        layout->addWidget(lblLms);
+    } else {
+        auto *lblNotes = new QLabel("📖 Đề cương chi tiết học phần");
+        lblNotes->setStyleSheet("font-size: 9px; color: #DC2626; background: transparent;");
+        layout->addWidget(lblNotes);
+
+        auto *lblLms = new QLabel("🎓 LMS");
+        lblLms->setStyleSheet("font-size: 9px; color: #DC2626; font-weight: bold; background: transparent;");
+        layout->addWidget(lblLms);
+    }
 
     return card;
 }

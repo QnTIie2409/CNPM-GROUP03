@@ -61,6 +61,15 @@ QWidget* createDayScheduleCard(const std::vector<ScheduleEntry> &entries, const 
             auto *cName = new QLabel(entry.courseName);
             cName->setStyleSheet("font-weight: bold; font-size: 13px; color: #112D55; background: transparent;");
             rowTop->addWidget(cName);
+
+            const QString typeBadge = (entry.type == ScheduleType::STUDY) ? "🌐 E-Learning" : "🏫 Trực tiếp";
+            const QString typeStyle = (entry.type == ScheduleType::STUDY)
+                ? "color: #0369A1; background: #E0F2FE; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;"
+                : "color: #15803D; background: #DCFCE7; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;";
+            auto *badge = new QLabel(typeBadge);
+            badge->setStyleSheet(typeStyle);
+            rowTop->addWidget(badge);
+
             rowTop->addStretch();
             auto *cCode = new QLabel(entry.courseCode);
             cCode->setStyleSheet("font-size: 11px; color: #64748B; background: transparent;");
@@ -675,18 +684,19 @@ QWidget *studentOverviewPage(int userId) {
         if (open.has_value()) {
             openSessionsCount++;
             auto *sessionBox = new QFrame;
-            sessionBox->setStyleSheet("background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px;");
+            sessionBox->setObjectName("sessionBox");
+            sessionBox->setStyleSheet("QFrame#sessionBox { background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px; }");
             auto *sLayout = new QVBoxLayout(sessionBox);
             sLayout->setSpacing(8);
 
             auto *cTitle = new QLabel(QString("Môn: %1 - %2 (Phiên #%3)")
                 .arg(course.code, course.name).arg(open->sessionId));
-            cTitle->setStyleSheet("font-weight: bold; color: #112D55; font-size: 13px; background: transparent;");
+            cTitle->setStyleSheet("font-weight: bold; color: #112D55; font-size: 13px; background: transparent; border: none;");
             sLayout->addWidget(cTitle);
 
             auto *info = new QLabel(QString("Thời gian đúng giờ: %1 phút | Đi muộn: đến %2 phút.")
                 .arg(open->presentWindowMinutes).arg(open->lateWindowMinutes));
-            info->setStyleSheet("color: #64748B; font-size: 12px; background: transparent;");
+            info->setStyleSheet("color: #64748B; font-size: 12px; background: transparent; border: none;");
             sLayout->addWidget(info);
 
             auto *row = new QHBoxLayout;
@@ -694,10 +704,26 @@ QWidget *studentOverviewPage(int userId) {
             code->setPlaceholderText("Nhập mã 6 chữ số");
             code->setMaxLength(6);
             code->setFixedWidth(180);
+            code->setStyleSheet("QLineEdit { background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; color: #112D55; font-size: 13px; } QLineEdit:focus { border: 1px solid #1B4F96; }");
+
             auto *submit = new QPushButton("Xác nhận điểm danh");
             submit->setCursor(Qt::PointingHandCursor);
+            submit->setStyleSheet(
+                "QPushButton {"
+                "  background-color: #1B4F96;"
+                "  color: #FFFFFF;"
+                "  font-weight: bold;"
+                "  font-size: 13px;"
+                "  padding: 8px 18px;"
+                "  border: none;"
+                "  border-radius: 6px;"
+                "}"
+                "QPushButton:hover { background-color: #163F7A; }"
+                "QPushButton:disabled { background-color: #94A3B8; color: #FFFFFF; }"
+            );
+
             auto *result = new QLabel;
-            result->setStyleSheet("font-size: 12px; font-weight: bold; background: transparent;");
+            result->setStyleSheet("font-size: 12px; font-weight: bold; background: transparent; border: none;");
 
             row->addWidget(code);
             row->addWidget(submit);
