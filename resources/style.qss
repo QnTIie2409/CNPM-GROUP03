@@ -10,6 +10,7 @@ QMainWindow {
 QWidget {
     font-size: 13px;
     color: #1E293B;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
 }
 
 /* Sidebar & Header */
@@ -43,7 +44,7 @@ QGroupBox::title {
 /* Buttons */
 QPushButton {
     background-color: #0284C7;
-    color: white;
+    color: #FFFFFF;
     font-weight: bold;
     border-radius: 6px;
     padding: 8px 16px;
@@ -72,6 +73,7 @@ QLineEdit, QTextEdit {
     border: 1px solid #CBD5E1;
     border-radius: 6px;
     padding: 6px 10px;
+    color: #0F172A;
 }
 
 QLineEdit:focus, QTextEdit:focus {
@@ -101,4 +103,38 @@ QLabel#statusAbsent {
     border-radius: 4px;
     padding: 4px 8px;
     font-weight: bold;
+}
+
+/* ==========================================================
+   Popup Dialogs & QMessageBox Styling (White text on dark)
+   ========================================================== */
+QDialog, QMessageBox {
+    background-color: #0F172A;
+    color: #FFFFFF;
+}
+
+QMessageBox QLabel {
+    color: #FFFFFF;
+    background-color: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+QMessageBox QPushButton {
+    background-color: #0284C7;
+    color: #FFFFFF;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 6px 24px;
+    min-width: 70px;
+    border: none;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #0369A1;
+}
+
+QMessageBox QPushButton:pressed {
+    background-color: #075985;
 }

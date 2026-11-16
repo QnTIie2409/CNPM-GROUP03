@@ -9,7 +9,7 @@ USE student_attendance;
 
 -- 1. Nạp tài khoản users
 INSERT INTO users (user_id, role, code, full_name, email, password_hash, is_active, created_at) VALUES
-(1, 'ADMIN', NULL, 'Lê Hoàng Phúc', 'admin@uth.edu.vn', 'e10adc3949ba59abbe56e057f20f883e', TRUE, NOW()),
+(1, 'ADMIN', 'admin', 'Lê Hoàng Phúc', 'admin@uth.edu.vn', 'e10adc3949ba59abbe56e057f20f883e', TRUE, NOW()),
 (2, 'LECTURER', 'GV0042', 'Dr. Trần Minh Quân', 'quan.tran@uth.edu.vn', 'e10adc3949ba59abbe56e057f20f883e', TRUE, NOW()),
 (3, 'LECTURER', 'GV0057', 'Nguyễn Thu Hà', 'ha.nguyen@uth.edu.vn', 'e10adc3949ba59abbe56e057f20f883e', TRUE, NOW()),
 (4, 'STUDENT', '2451010001', 'Nguyễn Minh Anh', 'minhanh.nguyen@sv.uth.edu.vn', 'e10adc3949ba59abbe56e057f20f883e', TRUE, NOW()),

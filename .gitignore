@@ -1,7 +1,12 @@
 # C++ & CMake build artifacts
 build/
+build*/
 bin/
 out/
+cmake-build-*/
+Desktop_Qt_*
+.qtcreator/
+.qtc_clangd/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -42,9 +47,10 @@ qrc_*.cpp
 *.userosv
 *.sln.docstates
 
-# Database & local secrets
+# Database & local logs
 *.db
 *.sqlite
 *.sqlite3
 .env
-.app.log
+*.log
+app.log

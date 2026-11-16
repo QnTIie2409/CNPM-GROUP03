@@ -2,6 +2,7 @@
 #include "../utils/ConfigReader.h"
 #include "../utils/Logger.h"
 #include <QDebug>
+#include <QSqlQuery>
 
 DatabaseManager::DatabaseManager() {
 }
@@ -58,6 +59,11 @@ bool DatabaseManager::connectToMySQL(const QString& host, int port, const QStrin
         Logger::logError("Database connection failed: " + m_lastError);
         return false;
     }
+
+    // Đảm bảo phiên kết nối sử dụng bảng mã utf8mb4 để tiếng Việt hiển thị chính xác
+    QSqlQuery utf8Query(m_db);
+    utf8Query.exec("SET NAMES utf8mb4;");
+    utf8Query.exec("SET CHARACTER SET utf8mb4;");
 
     Logger::log("Database connected successfully using driver: " + driver);
     return true;
