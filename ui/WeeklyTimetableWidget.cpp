@@ -192,6 +192,15 @@ QString WeeklyTimetableWidget::getPeriodText(int shiftIndex) const {
     }
 }
 
+static QString cleanRoomName(const QString &raw) {
+    if (raw.trimmed().isEmpty()) return "Chưa xếp phòng";
+    int idx = raw.indexOf('(');
+    if (idx != -1) {
+        return raw.left(idx).trimmed();
+    }
+    return raw.trimmed();
+}
+
 QWidget* WeeklyTimetableWidget::createCourseCard(const ScheduleEntry &entry, int shiftIndex) {
     auto *card = new QFrame;
     card->setObjectName("timetableCourseCard");
@@ -250,7 +259,7 @@ QWidget* WeeklyTimetableWidget::createCourseCard(const ScheduleEntry &entry, int
     lblTime->setStyleSheet("font-size: 10px; color: #334155; background: transparent;");
     layout->addWidget(lblTime);
 
-    auto *lblRoom = new QLabel(QString("📍 Phòng: %1").arg(entry.room.isEmpty() ? "Chưa xếp phòng" : entry.room));
+    auto *lblRoom = new QLabel(QString("📍 Phòng: %1").arg(cleanRoomName(entry.room)));
     lblRoom->setStyleSheet("font-size: 10px; color: #334155; background: transparent;");
     layout->addWidget(lblRoom);
 

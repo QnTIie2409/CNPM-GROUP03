@@ -62,8 +62,12 @@ bool DatabaseManager::connectToMySQL(const QString& host, int port, const QStrin
 
     // Đảm bảo phiên kết nối sử dụng bảng mã utf8mb4 để tiếng Việt hiển thị chính xác
     QSqlQuery utf8Query(m_db);
-    utf8Query.exec("SET NAMES utf8mb4;");
-    utf8Query.exec("SET CHARACTER SET utf8mb4;");
+    if (!utf8Query.exec("SET NAMES utf8mb4")) {
+        m_lastError = utf8Query.lastError().text();
+        Logger::logError("Cannot configure MySQL UTF-8 connection: " + m_lastError);
+        m_db.close();
+        return false;
+    }
 
     Logger::log("Database connected successfully using driver: " + driver);
     return true;

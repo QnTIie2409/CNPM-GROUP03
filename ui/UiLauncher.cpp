@@ -40,6 +40,15 @@ UiLauncher::UiLauncher(QObject *parent) : QObject(parent) {}
 
 namespace {
 
+static QString cleanRoomName(const QString &raw) {
+    if (raw.trimmed().isEmpty()) return "ONLINE";
+    int idx = raw.indexOf('(');
+    if (idx != -1) {
+        return raw.left(idx).trimmed();
+    }
+    return raw.trimmed();
+}
+
 QFrame *createKpiCard(const QString &title, const QString &value, const QString &subtext, const QString &valueColor = "") {
     auto *card = new QFrame;
     card->setObjectName("kpiCard");
@@ -220,7 +229,7 @@ QWidget* createDayScheduleCard(const std::vector<ScheduleEntry> &entries, const 
             cTime->setStyleSheet("font-size: 12px; color: #334155; background: transparent;");
             rowBottom->addWidget(cTime);
 
-            auto *cRoom = new QLabel(QString("📍 Phòng: %1").arg(entry.room.isEmpty() ? "Chưa xếp phòng" : entry.room));
+            auto *cRoom = new QLabel(QString("📍 Phòng: %1").arg(cleanRoomName(entry.room)));
             cRoom->setStyleSheet("font-size: 12px; color: #334155; background: transparent;");
             rowBottom->addWidget(cRoom);
             rowBottom->addStretch();
@@ -378,10 +387,15 @@ QWidget *lecturerOverviewPage(int userId, std::function<void(const QString&)> na
         aBadge->setStyleSheet("background: #DCFCE7; color: #15803D; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 8px;");
         aHead->addWidget(aBadge);
         aHead->addStretch();
-        auto *btnGoLive = new QPushButton("Vào phòng trực tiếp (Live session) →");
-        btnGoLive->setStyleSheet("background-color: #1B4F96; color: #FFFFFF; font-weight: bold; border-radius: 6px; padding: 6px 14px; border: none; font-size: 13px;");
+        auto *btnGoLive = new QPushButton("Vào phòng trực tiếp →");
+        btnGoLive->setObjectName("btnPrimary");
         btnGoLive->setCursor(Qt::PointingHandCursor);
         aHead->addWidget(btnGoLive);
+
+        auto *btnEndNow = new QPushButton("🛑 Kết thúc buổi học ngay");
+        btnEndNow->setObjectName("btnDanger");
+        btnEndNow->setCursor(Qt::PointingHandCursor);
+        aHead->addWidget(btnEndNow);
         lAlertLay->addLayout(aHead);
 
         auto *lblCourse = new QLabel(firstOpenCourseTitle);
@@ -398,6 +412,42 @@ QWidget *lecturerOverviewPage(int userId, std::function<void(const QString&)> na
                 navCallback("Live session");
             });
         }
+
+        QObject::connect(btnEndNow, &QPushButton::clicked, page, [page, firstOpenSession, navCallback] {
+            const int sessId = firstOpenSession->sessionId;
+            const auto recs = AttendanceRepository{}.findBySession(sessId);
+            const auto enrolled = CourseRepository{}.getEnrolledStudents(firstOpenSession->courseId);
+            int checkedCount = 0;
+            for (const auto &r : recs) {
+                if (r.status == AttendanceStatus::PRESENT || r.status == AttendanceStatus::LATE)
+                    checkedCount++;
+            }
+            int absentCount = static_cast<int>(enrolled.size()) - checkedCount;
+            if (absentCount < 0) absentCount = 0;
+
+            const QString msg = QString(
+                "Xác nhận kết thúc buổi học & đóng phiên điểm danh #%1 ngay lập tức?\n\n"
+                "• Sĩ số lớp: %2 sinh viên\n"
+                "• Đã điểm danh: %3 sinh viên\n"
+                "• %4 sinh viên chưa điểm danh sẽ tự động được ghi nhận là VẮNG (ABSENT).\n\n"
+                "Bạn có muốn kết thúc ca học ngay?")
+                .arg(sessId).arg(enrolled.size()).arg(checkedCount).arg(absentCount);
+
+            const auto reply = QMessageBox::question(page, "Xác nhận kết thúc buổi học",
+                msg, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+            if (reply == QMessageBox::Yes) {
+                const auto res = SessionService::instance().closeSession(sessId);
+                if (res.ok) {
+                    QMessageBox::information(page, "Đã kết thúc buổi học",
+                        QString("Buổi điểm danh #%1 đã kết thúc thành công.\n%2 sinh viên được ghi nhận vắng.")
+                            .arg(sessId).arg(absentCount));
+                    if (navCallback) navCallback("Overview");
+                } else {
+                    QMessageBox::warning(page, "Lỗi", res.message);
+                }
+            }
+        });
         leftCol->addWidget(liveAlertCard);
     }
 
@@ -451,7 +501,7 @@ QWidget *lecturerOverviewPage(int userId, std::function<void(const QString&)> na
             cTime->setStyleSheet("font-size: 12px; color: #334155; background: transparent;");
             r2->addWidget(cTime);
 
-            auto *cRoom = new QLabel(QString("📍 Phòng: %1").arg(entry.room.isEmpty() ? "ONLINE" : entry.room));
+            auto *cRoom = new QLabel(QString("📍 Phòng: %1").arg(cleanRoomName(entry.room)));
             cRoom->setStyleSheet("font-size: 12px; color: #334155; background: transparent;");
             r2->addWidget(cRoom);
             r2->addStretch();
@@ -612,10 +662,17 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
     auto *alertText = new QLabel;
     alertText->setStyleSheet("color: #92400E; font-size: 13px; font-weight: 600; background: transparent; border: none;");
     alertLay->addWidget(alertText, 1);
+
     auto *btnJumpLive = new QPushButton("Vào phòng trực tiếp →");
     btnJumpLive->setObjectName("btnOutline");
     btnJumpLive->setCursor(Qt::PointingHandCursor);
     alertLay->addWidget(btnJumpLive);
+
+    auto *btnEndSessionNow = new QPushButton("🛑 Kết thúc buổi học ngay (End Course Session)");
+    btnEndSessionNow->setObjectName("btnDanger");
+    btnEndSessionNow->setCursor(Qt::PointingHandCursor);
+    alertLay->addWidget(btnEndSessionNow);
+
     alertBox->setVisible(false);
     cardLayout->addWidget(alertBox);
 
@@ -693,8 +750,8 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
 
     // Action button
     auto *btnOpen = new QPushButton("Bắt đầu phiên điểm danh");
-    btnOpen->setFixedHeight(42);
-    btnOpen->setObjectName("btnSignIn");
+    btnOpen->setFixedHeight(40);
+    btnOpen->setObjectName("btnPrimary");
     btnOpen->setCursor(Qt::PointingHandCursor);
     cardLayout->addWidget(btnOpen);
 
@@ -750,12 +807,13 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
     QObject::connect(spinLate, QOverload<int>::of(&QSpinBox::valueChanged), page, [=](int) { validateInputs(); });
 
     // Check open session for currently selected course
-    auto checkCourseOpenSession = [=] {
+    std::function<void()> checkCourseOpenSession;
+    checkCourseOpenSession = [=, &checkCourseOpenSession] {
         if (courseBox->currentIndex() < 0) return;
         const int cid = courseBox->currentData().toInt();
         auto existing = SessionRepository{}.findOpenSessionForCourse(cid);
         if (existing.has_value()) {
-            alertText->setText(QString("⚠️ Lớp này đang có phiên điểm danh mở (#%1). Hãy vào phòng trực tiếp để điều hành hoặc đóng phiên trước khi mở mới.")
+            alertText->setText(QString("⚠️ Lớp này đang có phiên điểm danh mở (#%1). Hãy vào phòng trực tiếp để điều hành hoặc kết thúc phiên trước khi mở mới.")
                 .arg(existing->sessionId));
             alertBox->setVisible(true);
             btnOpen->setEnabled(false);
@@ -765,7 +823,48 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
         }
     };
 
-    QObject::connect(courseBox, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=](int) {
+    QObject::connect(btnEndSessionNow, &QPushButton::clicked, page, [=, &checkCourseOpenSession] {
+        if (courseBox->currentIndex() < 0) return;
+        const int cid = courseBox->currentData().toInt();
+        auto existing = SessionRepository{}.findOpenSessionForCourse(cid);
+        if (!existing.has_value()) return;
+
+        const auto enrolled = CourseRepository{}.getEnrolledStudents(cid);
+        const auto recs = AttendanceRepository{}.findBySession(existing->sessionId);
+        int checkedCount = 0;
+        for (const auto &r : recs) {
+            if (r.status == AttendanceStatus::PRESENT || r.status == AttendanceStatus::LATE)
+                checkedCount++;
+        }
+        int absentWillBe = static_cast<int>(enrolled.size()) - checkedCount;
+        if (absentWillBe < 0) absentWillBe = 0;
+
+        const QString confirmMsg = QString(
+            "Xác nhận kết thúc buổi điểm danh cho môn học này ngay lập tức?\n\n"
+            "• Phiên điểm danh: #%1\n"
+            "• Sĩ số lớp: %2 sinh viên\n"
+            "• Đã điểm danh: %3 sinh viên\n"
+            "• %4 sinh viên chưa điểm danh sẽ tự động được ghi nhận là VẮNG (ABSENT).\n\n"
+            "Bạn có chắc chắn muốn kết thúc buổi học ngay bây giờ?")
+            .arg(existing->sessionId).arg(enrolled.size()).arg(checkedCount).arg(absentWillBe);
+
+        const auto reply = QMessageBox::question(page, "Xác nhận kết thúc buổi học ngay",
+            confirmMsg, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+        if (reply == QMessageBox::Yes) {
+            const auto res = SessionService::instance().closeSession(existing->sessionId);
+            if (res.ok) {
+                QMessageBox::information(page, "Đã kết thúc buổi học",
+                    QString("Buổi điểm danh #%1 đã kết thúc thành công.\n%2 sinh viên được ghi nhận vắng.")
+                        .arg(existing->sessionId).arg(absentWillBe));
+                checkCourseOpenSession();
+            } else {
+                QMessageBox::warning(page, "Lỗi", res.message);
+            }
+        }
+    });
+
+    QObject::connect(courseBox, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, &checkCourseOpenSession](int) {
         checkCourseOpenSession();
     });
 
@@ -852,7 +951,7 @@ QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)>
 
         if (navCallback) {
             auto *btnGoOpen = new QPushButton("Mở phiên điểm danh ngay →");
-            btnGoOpen->setObjectName("btnSignIn");
+            btnGoOpen->setObjectName("btnPrimary");
             btnGoOpen->setCursor(Qt::PointingHandCursor);
             btnGoOpen->setFixedWidth(240);
             emptyLay->addWidget(btnGoOpen, 0, Qt::AlignCenter);
@@ -1309,7 +1408,7 @@ QWidget *lecturerReportPage(int userId) {
                 btnCancel->setObjectName("btnOutline");
                 btnBox->addWidget(btnCancel);
                 auto *btnSave = new QPushButton("Lưu thay đổi");
-                btnSave->setObjectName("btnSignIn");
+                btnSave->setObjectName("btnPrimary");
                 btnBox->addWidget(btnSave);
                 dLay->addLayout(btnBox);
 
@@ -1586,7 +1685,7 @@ QWidget *adminAccountsPage() {
     formGrid->addWidget(inPassword, 1);
 
     auto *btnCreate = new QPushButton("Tạo tài khoản");
-    btnCreate->setObjectName("btnSignIn");
+    btnCreate->setObjectName("btnPrimary");
     btnCreate->setFixedHeight(36);
     btnCreate->setCursor(Qt::PointingHandCursor);
     formGrid->addWidget(btnCreate, 1);
@@ -1822,7 +1921,7 @@ QWidget *adminCoursesPage() {
     formRow->addWidget(inLecturer, 2);
 
     auto *btnCreate = new QPushButton("Tạo môn học");
-    btnCreate->setObjectName("btnSignIn");
+    btnCreate->setObjectName("btnPrimary");
     btnCreate->setFixedHeight(36);
     btnCreate->setCursor(Qt::PointingHandCursor);
     formRow->addWidget(btnCreate, 1);
@@ -1923,7 +2022,7 @@ QWidget *adminCoursesPage() {
                 }
 
                 auto *btnAddStudent = new QPushButton("➕ Ghi danh sinh viên");
-                btnAddStudent->setObjectName("btnSignIn");
+                btnAddStudent->setObjectName("btnPrimary");
                 btnAddStudent->setFixedHeight(36);
                 btnAddStudent->setCursor(Qt::PointingHandCursor);
                 addRow->addWidget(studentCombo, 3);
@@ -2185,7 +2284,7 @@ QWidget *adminTimetablePage() {
     formRow2->addWidget(endDateEdit);
 
     auto *btnAdd = new QPushButton("Thêm lịch học");
-    btnAdd->setObjectName("btnSignIn");
+    btnAdd->setObjectName("btnPrimary");
     btnAdd->setFixedHeight(36);
     btnAdd->setCursor(Qt::PointingHandCursor);
     formRow2->addWidget(btnAdd);
@@ -2509,7 +2608,7 @@ QWidget *studentOverviewPage(int userId, std::function<void(const QString&)> nav
             cTime->setStyleSheet("font-size: 12px; color: #334155; background: transparent;");
             r2->addWidget(cTime);
 
-            auto *cRoom = new QLabel(QString("📍 Phòng: %1").arg(entry.room.isEmpty() ? "ONLINE" : entry.room));
+            auto *cRoom = new QLabel(QString("📍 Phòng: %1").arg(cleanRoomName(entry.room)));
             cRoom->setStyleSheet("font-size: 12px; color: #334155; background: transparent;");
             r2->addWidget(cRoom);
             r2->addStretch();
@@ -2795,7 +2894,7 @@ QWidget *studentAttendancePage(int userId) {
                                     : (e.dayOfWeek == 3) ? "Thứ 4" : (e.dayOfWeek == 4) ? "Thứ 5"
                                     : (e.dayOfWeek == 5) ? "Thứ 6" : (e.dayOfWeek == 6) ? "Thứ 7" : "Chủ nhật";
                 schedText = QString("%1 · %2–%3 · Phòng %4")
-                    .arg(dowStr, e.startTime.toString("HH:mm"), e.endTime.toString("HH:mm"), e.room.isEmpty() ? "ONLINE" : e.room);
+                    .arg(dowStr, e.startTime.toString("HH:mm"), e.endTime.toString("HH:mm"), cleanRoomName(e.room));
                 break;
             }
         }

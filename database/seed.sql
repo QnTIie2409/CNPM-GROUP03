@@ -7,6 +7,9 @@
 
 USE student_attendance;
 
+-- This file is UTF-8. Declare the import connection encoding explicitly.
+SET NAMES utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE attendance_change_logs;
 TRUNCATE TABLE attendance_records;
@@ -36,10 +39,10 @@ INSERT INTO users (user_id, role, code, full_name, email, password_hash, is_acti
 -- 5. Kinh tế chính trị Mác - Lênin (2 tín)
 INSERT INTO courses (course_id, code, name, user_id) VALUES
 (1, '012012210501', 'Phân tích thiết kế giải thuật', 2),
-(2, '012008010322', 'Tư duy thiết kế và đổi mới sáng tạo', 3),
+(2, '012008010322', 'Tư duy thiết kế và đổi mới sáng tạo', 2),
 (3, '012012103105', 'Lập trình Web', 2),
 (4, '012012210504', 'Công nghệ phần mềm', 2),
-(5, '012000510612', 'Kinh tế chính trị Mác - Lênin', 3);
+(5, '012000510612', 'Kinh tế chính trị Mác - Lênin', 2);
 
 -- 3. Nạp danh sách ghi danh (enrollments)
 INSERT INTO enrollments (enrollment_id, user_id, course_id, enrolled_at) VALUES
@@ -77,31 +80,31 @@ INSERT INTO enrollments (enrollment_id, user_id, course_id, enrolled_at) VALUES
 --      * VÀ từ tuần 3 đến tuần 7 (5 tuần: 26/10 đến 29/11): có thêm buổi E-learning / Tự học bài tập LMS buổi tối (Ca 5: 17:30 - 19:30).
 INSERT INTO schedule_entries (schedule_id, course_id, type, day_of_week, start_time, end_time, room, start_date, end_date) VALUES
 -- Thứ 2: Kinh tế chính trị Mác - Lênin (2 tín) - Ca 2 (09:25 - 11:55) - Trực tiếp 8 tuần (Không e-learning)
-(1, 5, 'CLASS', 1, '09:25:00', '11:55:00', 'E301 - CS1 (P.Thạnh Mỹ Tây, TP.HCM)', '2026-10-12', '2026-12-06'),
+(1, 5, 'CLASS', 1, '09:25:00', '11:55:00', 'E301 - CS1', '2026-10-12', '2026-12-06'),
 
 -- Thứ 3: Công nghệ phần mềm (3 tín)
 --  + Lớp học trên giảng đường (Ca 2: 09:25 - 11:55, suốt 8 tuần)
-(2, 4, 'CLASS', 2, '09:25:00', '11:55:00', 'B003 - CS1 (P.Thạnh Mỹ Tây, TP.HCM)', '2026-10-12', '2026-12-06'),
+(2, 4, 'CLASS', 2, '09:25:00', '11:55:00', 'B003 - CS1', '2026-10-12', '2026-12-06'),
 --  + E-learning tự học (Ca 5: 17:30 - 19:30, 5 tuần từ tuần 3 đến tuần 7)
-(3, 4, 'STUDY', 2, '17:30:00', '19:30:00', 'Online (Hệ thống: Courses.ut.edu.vn)', '2026-10-26', '2026-11-29'),
+(3, 4, 'STUDY', 2, '17:30:00', '19:30:00', 'ONLINE', '2026-10-26', '2026-11-29'),
 
 -- Thứ 4: Lập trình Web (3 tín)
 --  + Lớp học trên giảng đường (Ca 4: 14:50 - 17:20, suốt 8 tuần)
 (4, 3, 'CLASS', 3, '14:50:00', '17:20:00', 'A205 - CS1', '2026-10-12', '2026-12-06'),
 --  + E-learning tự học bài tập LMS (Ca 5: 17:30 - 19:30, 5 tuần từ tuần 3 đến tuần 7)
-(5, 3, 'STUDY', 3, '17:30:00', '19:30:00', 'ONLINE (Tự học & Bài tập LMS)', '2026-10-26', '2026-11-29'),
+(5, 3, 'STUDY', 3, '17:30:00', '19:30:00', 'ONLINE', '2026-10-26', '2026-11-29'),
 
 -- Thứ 5: Tư duy thiết kế và đổi mới sáng tạo (3 tín)
 --  + Lớp học trên giảng đường (Ca 2: 09:25 - 11:55, suốt 8 tuần)
 (6, 2, 'CLASS', 4, '09:25:00', '11:55:00', 'B102 - CS1', '2026-10-12', '2026-12-06'),
 --  + E-learning tự học (Ca 5: 17:30 - 19:30, 5 tuần từ tuần 3 đến tuần 7)
-(7, 2, 'STUDY', 4, '17:30:00', '19:30:00', 'Online (Hệ thống: Courses.ut.edu.vn)', '2026-10-26', '2026-11-29'),
+(7, 2, 'STUDY', 4, '17:30:00', '19:30:00', 'ONLINE', '2026-10-26', '2026-11-29'),
 
 -- Thứ 6: Phân tích thiết kế giải thuật (3 tín)
 --  + Lớp học trên giảng đường (Ca 2: 09:25 - 11:55, suốt 8 tuần)
 (8, 1, 'CLASS', 5, '09:25:00', '11:55:00', 'C201 - CS1', '2026-10-12', '2026-12-06'),
 --  + E-learning tự học (Ca 5: 17:30 - 19:30, 5 tuần từ tuần 3 đến tuần 7)
-(9, 1, 'STUDY', 5, '17:30:00', '19:30:00', 'Online (Hệ thống: Courses.ut.edu.vn)', '2026-10-26', '2026-11-29');
+(9, 1, 'STUDY', 5, '17:30:00', '19:30:00', 'ONLINE', '2026-10-26', '2026-11-29');
 
 -- 5. Nạp phiên điểm danh & kết quả điểm danh mẫu (attendance_sessions & attendance_records)
 -- Phiên đang mở hôm nay: Môn 5 (Kinh tế chính trị Mác - Lênin)
