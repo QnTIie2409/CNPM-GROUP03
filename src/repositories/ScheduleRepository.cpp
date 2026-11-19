@@ -4,6 +4,34 @@
 #include <QSqlQuery>
 #include <QSqlError>
 
+std::vector<ScheduleEntry> ScheduleRepository::findAll() {
+    std::vector<ScheduleEntry> list;
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+    query.prepare("SELECT s.schedule_id, s.course_id, s.type, s.day_of_week, s.start_time, s.end_time, "
+                  "s.room, s.start_date, s.end_date, c.code as course_code, c.name as course_name "
+                  "FROM schedule_entries s "
+                  "JOIN courses c ON s.course_id = c.course_id "
+                  "ORDER BY s.day_of_week, s.start_time");
+    if (query.exec()) {
+        while (query.next()) {
+            ScheduleEntry e;
+            e.scheduleId = query.value("schedule_id").toInt();
+            e.courseId = query.value("course_id").toInt();
+            e.type = (query.value("type").toString() == "CLASS") ? ScheduleType::CLASS : ScheduleType::STUDY;
+            e.dayOfWeek = query.value("day_of_week").toInt();
+            e.startTime = query.value("start_time").toTime();
+            e.endTime = query.value("end_time").toTime();
+            e.room = query.value("room").toString();
+            e.startDate = query.value("start_date").toDate();
+            e.endDate = query.value("end_date").toDate();
+            e.courseCode = query.value("course_code").toString();
+            e.courseName = query.value("course_name").toString();
+            list.push_back(e);
+        }
+    }
+    return list;
+}
+
 std::vector<ScheduleEntry> ScheduleRepository::findByCourse(int courseId) {
     std::vector<ScheduleEntry> list;
     QSqlQuery query(DatabaseManager::instance().getDatabase());

@@ -12,4 +12,5 @@ public:
                                        const QString &password);
 
     static ServiceResult deactivate(int userId);
+    static ServiceResult reactivate(int userId);
 };

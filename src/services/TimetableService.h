@@ -13,6 +13,7 @@ public:
     std::vector<ScheduleEntry> getLecturerTimetable(int lecturerUserId);
     std::vector<ScheduleEntry> getStudentTimetable(int studentUserId);
     std::vector<ScheduleEntry> getCourseTimetable(int courseId);
+    std::vector<ScheduleEntry> getAllSchedules();
 
     ServiceResult addSchedule(const ScheduleEntry& entry);
     ServiceResult deleteSchedule(int scheduleId);

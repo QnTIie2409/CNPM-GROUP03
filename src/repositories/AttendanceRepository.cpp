@@ -143,3 +143,34 @@ bool AttendanceRepository::updateStatusWithLog(int recordId, AttendanceStatus ne
 
     return db.commit();
 }
+
+std::vector<AttendanceChangeLogItem> AttendanceRepository::findLogsBySession(int sessionId) {
+    std::vector<AttendanceChangeLogItem> logs;
+    QSqlQuery q(DatabaseManager::instance().getDatabase());
+    q.prepare("SELECT l.log_id, l.record_id, l.old_status, l.new_status, l.reason, l.changed_at, "
+              "u_lect.full_name as lecturer_name, "
+              "u_stud.code as student_code, u_stud.full_name as student_name "
+              "FROM attendance_change_logs l "
+              "JOIN attendance_records r ON l.record_id = r.record_id "
+              "JOIN users u_lect ON l.user_id = u_lect.user_id "
+              "JOIN users u_stud ON r.user_id = u_stud.user_id "
+              "WHERE r.session_id = :sid "
+              "ORDER BY l.changed_at DESC");
+    q.bindValue(":sid", sessionId);
+    if (q.exec()) {
+        while (q.next()) {
+            AttendanceChangeLogItem item;
+            item.logId = q.value("log_id").toInt();
+            item.recordId = q.value("record_id").toInt();
+            item.oldStatus = q.value("old_status").toString();
+            item.newStatus = q.value("new_status").toString();
+            item.reason = q.value("reason").toString();
+            item.changedAt = q.value("changed_at").toDateTime();
+            item.lecturerName = q.value("lecturer_name").toString();
+            item.studentCode = q.value("student_code").toString();
+            item.studentName = q.value("student_name").toString();
+            logs.push_back(item);
+        }
+    }
+    return logs;
+}

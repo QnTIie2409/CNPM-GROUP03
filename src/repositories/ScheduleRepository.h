@@ -6,6 +6,7 @@
 
 class ScheduleRepository {
 public:
+    std::vector<ScheduleEntry> findAll();
     std::vector<ScheduleEntry> findByCourse(int courseId);
     std::vector<ScheduleEntry> findByStudent(int studentUserId);
     std::vector<ScheduleEntry> findByLecturer(int lecturerUserId);

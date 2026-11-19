@@ -21,6 +21,7 @@ public:
     CourseAttendanceStats getStudentStats(int studentUserId, int courseId);
     std::vector<AttendanceRecord> getStudentRecords(int studentUserId, int courseId);
     std::vector<AttendanceRecord> getSessionRecords(int sessionId);
+    std::vector<AttendanceChangeLogItem> getChangeLogsForSession(int sessionId);
     bool editRecordStatus(int recordId, AttendanceStatus newStatus, int lecturerUserId, const QString& reason);
 
 private:

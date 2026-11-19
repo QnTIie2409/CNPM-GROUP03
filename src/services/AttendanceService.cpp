@@ -33,6 +33,10 @@ std::vector<AttendanceRecord> AttendanceService::getSessionRecords(int sessionId
     return m_attendanceRepo.findBySession(sessionId);
 }
 
+std::vector<AttendanceChangeLogItem> AttendanceService::getChangeLogsForSession(int sessionId) {
+    return m_attendanceRepo.findLogsBySession(sessionId);
+}
+
 bool AttendanceService::editRecordStatus(int recordId, AttendanceStatus newStatus, int lecturerUserId, const QString& reason) {
     return m_attendanceRepo.updateStatusWithLog(recordId, newStatus, lecturerUserId, reason);
 }

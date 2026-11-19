@@ -20,6 +20,10 @@ std::vector<ScheduleEntry> TimetableService::getCourseTimetable(int courseId) {
     return m_repo.findByCourse(courseId);
 }
 
+std::vector<ScheduleEntry> TimetableService::getAllSchedules() {
+    return m_repo.findAll();
+}
+
 ServiceResult TimetableService::addSchedule(const ScheduleEntry& entry) {
     if (entry.courseId <= 0) {
         return ServiceResult::failure("Invalid course ID.");

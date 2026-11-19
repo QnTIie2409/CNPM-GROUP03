@@ -90,3 +90,25 @@ ServiceResult AccountService::deactivate(int userId)
     }
     return ServiceResult::success(QStringLiteral("Account deactivated successfully."));
 }
+
+ServiceResult AccountService::reactivate(int userId)
+{
+    QSqlDatabase db = serviceDb();
+    if (!db.isOpen())
+        return ServiceResult::failure(QStringLiteral("Cannot connect to database."));
+
+    QSqlQuery check(db);
+    check.prepare(QStringLiteral("SELECT 1 FROM users WHERE user_id = ?"));
+    check.addBindValue(userId);
+    if (!check.exec() || !check.next())
+        return ServiceResult::failure(QStringLiteral("Account not found."));
+
+    QSqlQuery q(db);
+    q.prepare(QStringLiteral("UPDATE users SET is_active = 1 WHERE user_id = ?"));
+    q.addBindValue(userId);
+    if (!q.exec()) {
+        qWarning() << "reactivate failed:" << q.lastError().text();
+        return ServiceResult::failure(QStringLiteral("Failed to reactivate account. Please try again."));
+    }
+    return ServiceResult::success(QStringLiteral("Account reactivated successfully."));
+}
