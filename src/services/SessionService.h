@@ -22,6 +22,7 @@ public:
     static QString generateRandomCode();
 
 signals:
+    void sessionOpened(int sessionId);
     void codeRotated(int sessionId, const QString &newCode);
     void sessionClosed(int sessionId);
 
@@ -33,7 +34,6 @@ private:
     SessionRepository m_sessionRepo;
     AttendanceRepository m_attendanceRepo;
     QTimer *m_timer = nullptr;
-    int m_activeSessionId = -1;
 };
 // Đổi trả về ServiceResult thay vì int đơn thuần
 

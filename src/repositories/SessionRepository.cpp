@@ -98,7 +98,9 @@ bool SessionRepository::lecturerTeachesCourse(int lecturerUserId, int courseId) 
 qint64 SessionRepository::serverSecondsSince(const QDateTime &startTime) {
     QSqlQuery query(DatabaseManager::instance().getDatabase());
     query.prepare("SELECT TIMESTAMPDIFF(SECOND, :start_time, NOW())");
-    query.bindValue(":start_time", startTime);
+    // DATETIME is a wall-clock value. Avoid Qt attaching/converting time zones
+    // when binding a QDateTime returned by the SQL driver.
+    query.bindValue(":start_time", startTime.toString("yyyy-MM-dd HH:mm:ss"));
     if (!query.exec() || !query.next()) {
         Logger::logError("SessionRepository::serverSecondsSince failed: " + query.lastError().text());
         return -1;
@@ -154,7 +156,12 @@ int SessionRepository::createSession(const AttendanceSession& session) {
 
 bool SessionRepository::updateSessionCode(int sessionId, const QString& newCode) {
     QSqlQuery query(DatabaseManager::instance().getDatabase());
-    query.prepare("UPDATE attendance_sessions SET session_code = :code, code_generated_at = NOW() WHERE session_id = :id");
+    // Only one client may rotate this row per interval. A second client's
+    // update affects zero rows after the first client has refreshed the time.
+    query.prepare("UPDATE attendance_sessions SET session_code = :code, code_generated_at = NOW() "
+                  "WHERE session_id = :id AND status = 'OPEN' "
+                  "AND code_generated_at <= DATE_SUB(NOW(), INTERVAL 60 SECOND) "
+                  "AND NOW() < TIMESTAMPADD(MINUTE, duration_minutes, start_time)");
     query.bindValue(":code", newCode);
     query.bindValue(":id", sessionId);
     if (!query.exec()) {

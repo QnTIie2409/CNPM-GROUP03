@@ -46,12 +46,31 @@ qrc_*.cpp
 *.suo
 *.userosv
 *.sln.docstates
-API_CONTRACT.md
 
 # Database & local logs
 *.db
 *.sqlite
 *.sqlite3
 .env
+.env.*
+!.env.example
 *.log
 app.log
+
+# Machine-specific settings and generated database contents
+/config.ini
+/config.local.ini
+/database/backups/
+/database/backup.sql
+*.sql.gz
+*.sql.zip
+*.sql.bak
+
+# Private keys and certificates (share templates, never private key material)
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Reference files supplied locally for reading
+/sources/

@@ -9,6 +9,8 @@ SessionService::SessionService() {
     m_timer = new QTimer(this);
     connect(m_timer, &QTimer::timeout, this, &SessionService::onRotateCode);
     m_timer->setInterval(1000);
+    // Keep monitoring sessions created before restart or by another app.
+    m_timer->start();
 }
 
 SessionService& SessionService::instance() {
@@ -40,7 +42,9 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
     if (existing.has_value()) {
         const qint64 elapsed = m_sessionRepo.serverSecondsSince(existing->startTime);
         if (elapsed >= 0 && elapsed >= static_cast<qint64>(existing->durationMinutes) * 60) {
-            closeSession(existing->sessionId);
+            const auto closed = closeSession(existing->sessionId);
+            if (!closed.ok)
+                return closed;
         } else {
             return ServiceResult::failure("An attendance session is already open for this course!");
         }
@@ -69,9 +73,7 @@ ServiceResult SessionService::openSession(int courseId, int lecturerUserId, int 
         newSessionId = idQuery.value(0).toLongLong();
     }
 
-    m_activeSessionId = newSessionId;
-    if (!m_timer->isActive())
-        m_timer->start();
+    emit sessionOpened(static_cast<int>(newSessionId));
 
     return ServiceResult::success("Attendance session opened successfully! Initial code: " + code, newSessionId);
 }
@@ -128,11 +130,6 @@ ServiceResult SessionService::closeSession(int sessionId)
         return ServiceResult::failure("Failed to commit attendance session closure.");
     }
 
-    if (m_activeSessionId == sessionId) {
-        m_timer->stop();
-        m_activeSessionId = -1;
-    }
-
     emit sessionClosed(sessionId);
 
     QString msg = QString("Attendance session closed successfully! Automatically marked %1 student(s) as Absent.")
@@ -160,11 +157,6 @@ std::optional<AttendanceSession> SessionService::getSessionById(int sessionId) {
 
 void SessionService::onRotateCode() {
     const auto openSessions = m_sessionRepo.findOpenSessions();
-    if (openSessions.empty()) {
-        m_timer->stop();
-        m_activeSessionId = -1;
-        return;
-    }
 
     for (const auto &session : openSessions) {
         const qint64 elapsedSeconds = m_sessionRepo.serverSecondsSince(session.startTime);
@@ -179,14 +171,13 @@ void SessionService::onRotateCode() {
         if (codeAge < 0)
             continue;
         if (codeAge >= 60) {
-            const QString newCode = generateRandomCode();
+            QString newCode;
+            do {
+                newCode = generateRandomCode();
+            } while (newCode == session.sessionCode);
             if (m_sessionRepo.updateSessionCode(session.sessionId, newCode))
                 emit codeRotated(session.sessionId, newCode);
         }
     }
 
-    if (m_sessionRepo.findOpenSessions().empty()) {
-        m_timer->stop();
-        m_activeSessionId = -1;
-    }
 }
