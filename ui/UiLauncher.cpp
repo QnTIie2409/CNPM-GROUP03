@@ -261,7 +261,7 @@ QWidget *createActiveBadgeWidget(bool isActive) {
     return container;
 }
 
-QWidget *lecturerOverviewPage(int userId, std::function<void(const QString&)> navCallback = nullptr) {
+QWidget *lecturerOverviewPage(int userId, std::function<void(const QString&)> navCallback = nullptr, AppShell *shell = nullptr) {
     auto *page = new QWidget;
     auto *pageLayout = new QVBoxLayout(page);
     pageLayout->setContentsMargins(32, 28, 32, 28);
@@ -376,79 +376,139 @@ QWidget *lecturerOverviewPage(int userId, std::function<void(const QString&)> na
     auto *leftCol = new QVBoxLayout;
     leftCol->setSpacing(18);
 
-    if (activeOpenSessions > 0 && firstOpenSession.has_value()) {
-        auto *liveAlertCard = new QFrame;
-        liveAlertCard->setStyleSheet("background-color: #EFF6FF; border: 1.5px solid #1B4F96; border-radius: 12px; padding: 16px;");
-        auto *lAlertLay = new QVBoxLayout(liveAlertCard);
-        lAlertLay->setSpacing(8);
+    auto *liveAlertCard = new QFrame;
+    liveAlertCard->setStyleSheet("background-color: #EFF6FF; border: 1.5px solid #1B4F96; border-radius: 12px; padding: 16px;");
+    auto *lAlertLay = new QVBoxLayout(liveAlertCard);
+    lAlertLay->setSpacing(8);
 
-        auto *aHead = new QHBoxLayout;
-        auto *aBadge = new QLabel("● PHIÊN ĐIỂM DANH ĐANG MỞ");
-        aBadge->setStyleSheet("background: #DCFCE7; color: #15803D; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 8px;");
-        aHead->addWidget(aBadge);
-        aHead->addStretch();
-        auto *btnGoLive = new QPushButton("Vào phòng trực tiếp →");
-        btnGoLive->setObjectName("btnPrimary");
-        btnGoLive->setCursor(Qt::PointingHandCursor);
-        aHead->addWidget(btnGoLive);
+    auto *aHead = new QHBoxLayout;
+    auto *aBadge = new QLabel("● PHIÊN ĐIỂM DANH ĐANG MỞ");
+    aBadge->setStyleSheet("background: #DCFCE7; color: #15803D; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 8px;");
+    aHead->addWidget(aBadge);
+    aHead->addStretch();
+    auto *btnGoLive = new QPushButton("Vào phòng trực tiếp →");
+    btnGoLive->setObjectName("btnPrimary");
+    btnGoLive->setCursor(Qt::PointingHandCursor);
+    aHead->addWidget(btnGoLive);
 
-        auto *btnEndNow = new QPushButton("🛑 Kết thúc buổi học ngay");
-        btnEndNow->setObjectName("btnDanger");
-        btnEndNow->setCursor(Qt::PointingHandCursor);
-        aHead->addWidget(btnEndNow);
-        lAlertLay->addLayout(aHead);
+    auto *btnEndNow = new QPushButton("🛑 Kết thúc buổi học ngay");
+    btnEndNow->setObjectName("btnDanger");
+    btnEndNow->setCursor(Qt::PointingHandCursor);
+    aHead->addWidget(btnEndNow);
+    lAlertLay->addLayout(aHead);
 
-        auto *lblCourse = new QLabel(firstOpenCourseTitle);
-        lblCourse->setStyleSheet("font-size: 15px; font-weight: bold; color: #112D55; background: transparent;");
-        lAlertLay->addWidget(lblCourse);
+    auto *lblCourse = new QLabel;
+    lblCourse->setStyleSheet("font-size: 15px; font-weight: bold; color: #112D55; background: transparent;");
+    lAlertLay->addWidget(lblCourse);
 
-        auto *lblCodeNow = new QLabel(QString("Mã 6 chữ số: <span style='font-size: 22px; font-weight: 800; color: #1B4F96; letter-spacing: 4px;'>%1</span> (tự xoay sau 60s)")
-            .arg(firstOpenSession->sessionCode));
-        lblCodeNow->setStyleSheet("font-size: 13px; color: #334155; background: transparent;");
-        lAlertLay->addWidget(lblCodeNow);
+    auto *lblCodeNow = new QLabel;
+    lblCodeNow->setStyleSheet("font-size: 13px; color: #334155; background: transparent;");
+    lAlertLay->addWidget(lblCodeNow);
 
-        if (navCallback) {
-            QObject::connect(btnGoLive, &QPushButton::clicked, page, [navCallback] {
-                navCallback("Live session");
-            });
-        }
+    leftCol->addWidget(liveAlertCard);
 
-        QObject::connect(btnEndNow, &QPushButton::clicked, page, [page, firstOpenSession, navCallback] {
-            const int sessId = firstOpenSession->sessionId;
-            const auto recs = AttendanceRepository{}.findBySession(sessId);
-            const auto enrolled = CourseRepository{}.getEnrolledStudents(firstOpenSession->courseId);
-            int checkedCount = 0;
-            for (const auto &r : recs) {
-                if (r.status == AttendanceStatus::PRESENT || r.status == AttendanceStatus::LATE)
-                    checkedCount++;
+    if (navCallback) {
+        QObject::connect(btnGoLive, &QPushButton::clicked, page, [navCallback] {
+            navCallback("Live session");
+        });
+    }
+
+    auto activeSessionId = std::make_shared<int>(0);
+    auto activeCourseId = std::make_shared<int>(0);
+
+    auto updateOverviewAlert = std::make_shared<std::function<void()>>();
+    *updateOverviewAlert = [=]() {
+        CourseRepository cr;
+        SessionRepository sr;
+        const auto tCourses = cr.findByLecturer(userId);
+        std::optional<AttendanceSession> openSess;
+        Course openC;
+        for (const auto &c : tCourses) {
+            auto op = sr.findOpenSessionForCourse(c.courseId);
+            if (op.has_value()) {
+                openSess = op;
+                openC = c;
+                break;
             }
-            int absentCount = static_cast<int>(enrolled.size()) - checkedCount;
-            if (absentCount < 0) absentCount = 0;
+        }
+        if (openSess.has_value()) {
+            *activeSessionId = openSess->sessionId;
+            *activeCourseId = openC.courseId;
+            lblCourse->setText(QString("%1 - %2 · Phiên #%3").arg(openC.code, openC.name).arg(openSess->sessionId));
+            lblCodeNow->setText(QString("Mã 6 chữ số: <span style='font-size: 22px; font-weight: 800; color: #1B4F96; letter-spacing: 4px;'>%1</span> (tự xoay sau 60s)")
+                .arg(openSess->sessionCode));
+            liveAlertCard->setVisible(true);
+        } else {
+            *activeSessionId = 0;
+            *activeCourseId = 0;
+            liveAlertCard->setVisible(false);
+        }
+    };
+    (*updateOverviewAlert)();
 
-            const QString msg = QString(
-                "Xác nhận kết thúc buổi học & đóng phiên điểm danh #%1 ngay lập tức?\n\n"
-                "• Sĩ số lớp: %2 sinh viên\n"
-                "• Đã điểm danh: %3 sinh viên\n"
-                "• %4 sinh viên chưa điểm danh sẽ tự động được ghi nhận là VẮNG (ABSENT).\n\n"
-                "Bạn có muốn kết thúc ca học ngay?")
-                .arg(sessId).arg(enrolled.size()).arg(checkedCount).arg(absentCount);
+    QObject::connect(btnEndNow, &QPushButton::clicked, page, [=, updateOverviewAlert] {
+        const int sessId = *activeSessionId;
+        if (sessId <= 0) return;
+        const int cid = *activeCourseId;
+        const auto recs = AttendanceRepository{}.findBySession(sessId);
+        const auto enrolled = CourseRepository{}.getEnrolledStudents(cid);
+        int checkedCount = 0;
+        for (const auto &r : recs) {
+            if (r.status == AttendanceStatus::PRESENT || r.status == AttendanceStatus::LATE)
+                checkedCount++;
+        }
+        int absentCount = static_cast<int>(enrolled.size()) - checkedCount;
+        if (absentCount < 0) absentCount = 0;
 
-            const auto reply = QMessageBox::question(page, "Xác nhận kết thúc buổi học",
-                msg, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        const QString msg = QString(
+            "Xác nhận kết thúc buổi học & đóng phiên điểm danh #%1 ngay lập tức?\n\n"
+            "• Sĩ số lớp: %2 sinh viên\n"
+            "• Đã điểm danh: %3 sinh viên\n"
+            "• %4 sinh viên chưa điểm danh sẽ tự động được ghi nhận là VẮNG (ABSENT).\n\n"
+            "Bạn có muốn kết thúc ca học ngay?")
+            .arg(sessId).arg(enrolled.size()).arg(checkedCount).arg(absentCount);
 
-            if (reply == QMessageBox::Yes) {
-                const auto res = SessionService::instance().closeSession(sessId);
-                if (res.ok) {
-                    QMessageBox::information(page, "Đã kết thúc buổi học",
-                        QString("Buổi điểm danh #%1 đã kết thúc thành công.\n%2 sinh viên được ghi nhận vắng.")
-                            .arg(sessId).arg(absentCount));
-                    if (navCallback) navCallback("Overview");
-                } else {
-                    QMessageBox::warning(page, "Lỗi", res.message);
-                }
+        const auto reply = QMessageBox::question(page, "Xác nhận kết thúc buổi học",
+            msg, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+        if (reply == QMessageBox::Yes) {
+            const auto res = SessionService::instance().closeSession(sessId);
+            if (res.ok) {
+                QMessageBox::information(page, "Đã kết thúc buổi học",
+                    QString("Buổi điểm danh #%1 đã kết thúc thành công.\n%2 sinh viên được ghi nhận vắng.")
+                        .arg(sessId).arg(absentCount));
+                if (updateOverviewAlert && *updateOverviewAlert) (*updateOverviewAlert)();
+            } else {
+                QMessageBox::warning(page, "Lỗi", res.message);
+            }
+        }
+    });
+
+    QObject::connect(&SessionService::instance(), &SessionService::sessionOpened, page, [=, updateOverviewAlert](int) {
+        if (updateOverviewAlert && *updateOverviewAlert) (*updateOverviewAlert)();
+    });
+    QObject::connect(&SessionService::instance(), &SessionService::codeRotated, page, [=, updateOverviewAlert](int, const QString&) {
+        if (updateOverviewAlert && *updateOverviewAlert) (*updateOverviewAlert)();
+    });
+    QObject::connect(&SessionService::instance(), &SessionService::sessionClosed, page, [=, updateOverviewAlert](int) {
+        if (updateOverviewAlert && *updateOverviewAlert) (*updateOverviewAlert)();
+    });
+
+    auto *overviewTimer = new QTimer(page);
+    overviewTimer->setInterval(2000);
+    QObject::connect(overviewTimer, &QTimer::timeout, page, [=, updateOverviewAlert]() {
+        if (page->isVisible() && updateOverviewAlert && *updateOverviewAlert) {
+            (*updateOverviewAlert)();
+        }
+    });
+    overviewTimer->start();
+
+    if (shell) {
+        QObject::connect(shell, &AppShell::pageChanged, page, [=, updateOverviewAlert](const QString &cur) {
+            if (cur == "Overview" && updateOverviewAlert && *updateOverviewAlert) {
+                (*updateOverviewAlert)();
             }
         });
-        leftCol->addWidget(liveAlertCard);
     }
 
     const auto lecturerEntries = TimetableService::instance().getLecturerTimetable(userId);
@@ -616,7 +676,7 @@ QWidget *lecturerOverviewPage(int userId, std::function<void(const QString&)> na
     return page;
 }
 
-QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)> navCallback = nullptr) {
+QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)> navCallback = nullptr, AppShell *shell = nullptr) {
     auto *page = new QWidget;
     auto *layout = new QVBoxLayout(page);
     layout->setContentsMargins(32, 28, 32, 28);
@@ -807,8 +867,8 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
     QObject::connect(spinLate, QOverload<int>::of(&QSpinBox::valueChanged), page, [=](int) { validateInputs(); });
 
     // Check open session for currently selected course
-    std::function<void()> checkCourseOpenSession;
-    checkCourseOpenSession = [=, &checkCourseOpenSession] {
+    auto checkCourseOpenSession = std::make_shared<std::function<void()>>();
+    *checkCourseOpenSession = [=, checkCourseOpenSession]() {
         if (courseBox->currentIndex() < 0) return;
         const int cid = courseBox->currentData().toInt();
         auto existing = SessionRepository{}.findOpenSessionForCourse(cid);
@@ -823,7 +883,7 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
         }
     };
 
-    QObject::connect(btnEndSessionNow, &QPushButton::clicked, page, [=, &checkCourseOpenSession] {
+    QObject::connect(btnEndSessionNow, &QPushButton::clicked, page, [=, checkCourseOpenSession] {
         if (courseBox->currentIndex() < 0) return;
         const int cid = courseBox->currentData().toInt();
         auto existing = SessionRepository{}.findOpenSessionForCourse(cid);
@@ -857,18 +917,33 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
                 QMessageBox::information(page, "Đã kết thúc buổi học",
                     QString("Buổi điểm danh #%1 đã kết thúc thành công.\n%2 sinh viên được ghi nhận vắng.")
                         .arg(existing->sessionId).arg(absentWillBe));
-                checkCourseOpenSession();
+                if (checkCourseOpenSession && *checkCourseOpenSession) (*checkCourseOpenSession)();
             } else {
                 QMessageBox::warning(page, "Lỗi", res.message);
             }
         }
     });
 
-    QObject::connect(courseBox, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, &checkCourseOpenSession](int) {
-        checkCourseOpenSession();
+    QObject::connect(courseBox, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, checkCourseOpenSession](int) {
+        if (checkCourseOpenSession && *checkCourseOpenSession) (*checkCourseOpenSession)();
     });
 
-    checkCourseOpenSession();
+    QObject::connect(&SessionService::instance(), &SessionService::sessionOpened, page, [=, checkCourseOpenSession](int) {
+        if (checkCourseOpenSession && *checkCourseOpenSession) (*checkCourseOpenSession)();
+    });
+    QObject::connect(&SessionService::instance(), &SessionService::sessionClosed, page, [=, checkCourseOpenSession](int) {
+        if (checkCourseOpenSession && *checkCourseOpenSession) (*checkCourseOpenSession)();
+    });
+
+    if (shell) {
+        QObject::connect(shell, &AppShell::pageChanged, page, [=, checkCourseOpenSession](const QString &cur) {
+            if (cur == "Open session" && checkCourseOpenSession && *checkCourseOpenSession) {
+                (*checkCourseOpenSession)();
+            }
+        });
+    }
+
+    (*checkCourseOpenSession)();
 
     // Open button logic
     QObject::connect(btnOpen, &QPushButton::clicked, page, [=] {
@@ -893,7 +968,7 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
     return page;
 }
 
-QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)> navCallback = nullptr) {
+QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)> navCallback = nullptr, AppShell *shell = nullptr) {
     auto *page = new QWidget;
     auto *pageLayout = new QVBoxLayout(page);
     pageLayout->setContentsMargins(32, 28, 32, 28);
@@ -910,201 +985,68 @@ QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)>
     headerBox->addWidget(subTitle);
     pageLayout->addLayout(headerBox);
 
-    CourseRepository courseRepo;
-    SessionRepository sessionRepo;
-    const auto taught = courseRepo.findByLecturer(userId);
+    auto *liveContainer = new QWidget;
+    auto *liveLayout = new QVBoxLayout(liveContainer);
+    liveLayout->setContentsMargins(0, 0, 0, 0);
+    liveLayout->setSpacing(16);
+    pageLayout->addWidget(liveContainer, 1);
 
-    // Find first active session for this lecturer
-    std::optional<AttendanceSession> activeSession;
-    Course activeCourse;
-    for (const auto &c : taught) {
-        auto open = sessionRepo.findOpenSessionForCourse(c.courseId);
-        if (open.has_value()) {
-            activeSession = open;
-            activeCourse = c;
-            break;
-        }
-    }
+    auto currentSessionId = std::make_shared<int>(0);
+    auto activeCourseCode = std::make_shared<QString>();
+    auto activeCourseName = std::make_shared<QString>();
 
-    if (!activeSession.has_value()) {
-        auto *emptyCard = new QFrame;
-        emptyCard->setObjectName("overviewCard");
-        auto *emptyLay = new QVBoxLayout(emptyCard);
-        emptyLay->setContentsMargins(32, 36, 32, 36);
-        emptyLay->setSpacing(16);
-        emptyLay->setAlignment(Qt::AlignCenter);
+    auto lblCodeNumberPtr = std::make_shared<QLabel*>(nullptr);
+    auto lblBadgeLivePtr = std::make_shared<QLabel*>(nullptr);
+    auto btnCloseSessionPtr = std::make_shared<QPushButton*>(nullptr);
+    auto cardPresentValPtr = std::make_shared<QLabel*>(nullptr);
+    auto cardLateValPtr = std::make_shared<QLabel*>(nullptr);
+    auto cardPendingValPtr = std::make_shared<QLabel*>(nullptr);
+    auto studentTablePtr = std::make_shared<QTableWidget*>(nullptr);
+    auto enrolledStudentsList = std::make_shared<std::vector<User>>();
 
-        auto *lblIcon = new QLabel("🕒");
-        lblIcon->setStyleSheet("font-size: 48px; background: transparent;");
-        lblIcon->setAlignment(Qt::AlignCenter);
-        emptyLay->addWidget(lblIcon);
+    auto refreshLiveTable = std::make_shared<std::function<void()>>();
+    *refreshLiveTable = [=]() {
+        const int sessId = *currentSessionId;
+        if (sessId <= 0 || !*studentTablePtr) return;
 
-        auto *lblEmptyTitle = new QLabel("Hiện không có phiên điểm danh nào đang mở");
-        lblEmptyTitle->setStyleSheet("font-size: 18px; font-weight: 700; color: #112D55; background: transparent;");
-        lblEmptyTitle->setAlignment(Qt::AlignCenter);
-        emptyLay->addWidget(lblEmptyTitle);
-
-        auto *lblEmptySub = new QLabel("Hãy chọn lớp và mở phiên điểm danh mới để bắt đầu cấp mã cho sinh viên.");
-        lblEmptySub->setStyleSheet("font-size: 13px; color: #64748B; background: transparent;");
-        lblEmptySub->setAlignment(Qt::AlignCenter);
-        emptyLay->addWidget(lblEmptySub);
-
-        if (navCallback) {
-            auto *btnGoOpen = new QPushButton("Mở phiên điểm danh ngay →");
-            btnGoOpen->setObjectName("btnPrimary");
-            btnGoOpen->setCursor(Qt::PointingHandCursor);
-            btnGoOpen->setFixedWidth(240);
-            emptyLay->addWidget(btnGoOpen, 0, Qt::AlignCenter);
-            QObject::connect(btnGoOpen, &QPushButton::clicked, page, [navCallback] {
-                navCallback("Open session");
-            });
-        }
-
-        pageLayout->addWidget(emptyCard);
-        pageLayout->addStretch();
-        return page;
-    }
-
-    // Active Session Details
-    const int sessId = activeSession->sessionId;
-    const int courseId = activeCourse.courseId;
-    const auto enrolledStudents = courseRepo.getEnrolledStudents(courseId);
-    const int totalEnrolled = static_cast<int>(enrolledStudents.size());
-
-    // 1. Session Info & Giant Rotating Code Box
-    auto *sessionCard = new QFrame;
-    sessionCard->setObjectName("overviewCard");
-    auto *sLay = new QVBoxLayout(sessionCard);
-    sLay->setContentsMargins(24, 20, 24, 20);
-    sLay->setSpacing(14);
-
-    auto *cHeaderRow = new QHBoxLayout;
-    auto *cTitle = new QLabel(QString("Môn: %1 - %2 · Phiên #%3").arg(activeCourse.code, activeCourse.name).arg(sessId));
-    cTitle->setStyleSheet("font-size: 16px; font-weight: 700; color: #112D55; background: transparent;");
-    cHeaderRow->addWidget(cTitle);
-    cHeaderRow->addStretch();
-    auto *badgeLive = new QLabel("● ĐANG DIỄN RA");
-    badgeLive->setStyleSheet("background: #DCFCE7; color: #15803D; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 4px 10px;");
-    cHeaderRow->addWidget(badgeLive);
-    sLay->addLayout(cHeaderRow);
-
-    auto *timeInfo = new QLabel(QString("Bắt đầu lúc: %1 | Đúng giờ: 0–%2p | Đi muộn: đến %3p | Thời lượng: %4p")
-        .arg(activeSession->startTime.toString("HH:mm:ss dd/MM/yyyy"))
-        .arg(activeSession->presentWindowMinutes)
-        .arg(activeSession->lateWindowMinutes)
-        .arg(activeSession->durationMinutes));
-    timeInfo->setStyleSheet("color: #64748B; font-size: 12px; background: transparent;");
-    sLay->addWidget(timeInfo);
-
-    // GIANT ROTATING CODE BOX
-    auto *codeBox = new QFrame;
-    codeBox->setObjectName("liveCodeBox");
-    auto *codeBoxLay = new QVBoxLayout(codeBox);
-    codeBoxLay->setContentsMargins(20, 18, 20, 18);
-    codeBoxLay->setSpacing(8);
-    codeBoxLay->setAlignment(Qt::AlignCenter);
-
-    auto *codeNumber = new QLabel(activeSession->sessionCode);
-    codeNumber->setObjectName("liveCodeNumber");
-    codeNumber->setAlignment(Qt::AlignCenter);
-    codeBoxLay->addWidget(codeNumber);
-
-    auto *codeHint = new QLabel("🔄 Mã 6 số tự động cập nhật sau mỗi 60 giây. Sinh viên dùng mã này để xác nhận điểm danh.");
-    codeHint->setObjectName("liveCodeHint");
-    codeHint->setAlignment(Qt::AlignCenter);
-    codeBoxLay->addWidget(codeHint);
-
-    sLay->addWidget(codeBox);
-    pageLayout->addWidget(sessionCard);
-
-    // 2. Real-time Live Stats KPIs
-    auto *kpiRow = new QHBoxLayout;
-    kpiRow->setSpacing(16);
-
-    auto *cardPresent = createKpiCard("Đúng giờ (Present)", "0", "Sinh viên check-in đúng giờ", "#15803D");
-    auto *cardLate = createKpiCard("Đi muộn (Late)", "0", "Check-in trong cửa sổ muộn", "#D97706");
-    auto *cardPending = createKpiCard("Chưa điểm danh (Pending)", QString::number(totalEnrolled), "Sẽ ghi nhận Vắng nếu hết giờ", "#B91C1C");
-    auto *cardTotal = createKpiCard("Sĩ số (Enrolled)", QString::number(totalEnrolled), "Tổng sinh viên lớp học phần", "#112D55");
-
-    kpiRow->addWidget(cardPresent);
-    kpiRow->addWidget(cardLate);
-    kpiRow->addWidget(cardPending);
-    kpiRow->addWidget(cardTotal);
-    pageLayout->addLayout(kpiRow);
-
-    // 3. Student Check-in Status Table
-    auto *tableCard = new QFrame;
-    tableCard->setObjectName("overviewCard");
-    auto *tLay = new QVBoxLayout(tableCard);
-    tLay->setContentsMargins(20, 18, 20, 18);
-    tLay->setSpacing(12);
-
-    auto *tHeader = new QHBoxLayout;
-    auto *tTitle = new QLabel("Danh sách sinh viên & Trạng thái check-in");
-    tTitle->setObjectName("overviewCardTitle");
-    tHeader->addWidget(tTitle);
-    tHeader->addStretch();
-    tLay->addLayout(tHeader);
-
-    auto *studentTable = new QTableWidget;
-    studentTable->setColumnCount(5);
-    studentTable->setHorizontalHeaderLabels({"STT", "Mã SV", "Họ và tên", "Trạng thái", "Giờ check-in"});
-    studentTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-    studentTable->setColumnWidth(0, 50);
-    studentTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
-    studentTable->setColumnWidth(1, 130);
-    studentTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
-    studentTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
-    studentTable->setColumnWidth(3, 140);
-    studentTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Fixed);
-    studentTable->setColumnWidth(4, 150);
-    studentTable->verticalHeader()->setVisible(false);
-    studentTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    studentTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    studentTable->setMinimumHeight(240);
-    tLay->addWidget(studentTable);
-
-    // Helper to refresh live table and KPIs
-    auto refreshLiveTable = [=]() {
         const auto recs = AttendanceRepository{}.findBySession(sessId);
         int pres = 0, lt = 0;
         for (const auto &r : recs) {
             if (r.status == AttendanceStatus::PRESENT) pres++;
             else if (r.status == AttendanceStatus::LATE) lt++;
         }
+        const int totalEnrolled = static_cast<int>(enrolledStudentsList->size());
         int pend = totalEnrolled - (pres + lt);
         if (pend < 0) pend = 0;
 
-        auto findValLabel = [](QWidget *cd) -> QLabel* {
-            return cd->findChild<QLabel*>("kpiValue");
-        };
-        if (auto *l = findValLabel(cardPresent)) l->setText(QString::number(pres));
-        if (auto *l = findValLabel(cardLate)) l->setText(QString::number(lt));
-        if (auto *l = findValLabel(cardPending)) l->setText(QString::number(pend));
+        if (*cardPresentValPtr) (*cardPresentValPtr)->setText(QString::number(pres));
+        if (*cardLateValPtr) (*cardLateValPtr)->setText(QString::number(lt));
+        if (*cardPendingValPtr) (*cardPendingValPtr)->setText(QString::number(pend));
 
-        studentTable->setRowCount(totalEnrolled);
+        auto *stTable = *studentTablePtr;
+        stTable->setRowCount(totalEnrolled);
         for (int i = 0; i < totalEnrolled; ++i) {
-            const auto &st = enrolledStudents[i];
+            const auto &st = (*enrolledStudentsList)[i];
             auto *itemIdx = new QTableWidgetItem(QString::number(i + 1));
             itemIdx->setTextAlignment(Qt::AlignCenter);
-            studentTable->setItem(i, 0, itemIdx);
+            stTable->setItem(i, 0, itemIdx);
 
             auto *itemCode = new QTableWidgetItem(st.code);
             itemCode->setTextAlignment(Qt::AlignCenter);
-            studentTable->setItem(i, 1, itemCode);
+            stTable->setItem(i, 1, itemCode);
 
             auto *itemName = new QTableWidgetItem(st.fullName);
             itemName->setTextAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-            studentTable->setItem(i, 2, itemName);
+            stTable->setItem(i, 2, itemName);
 
             bool checked = false;
             for (const auto &r : recs) {
                 if (r.studentUserId == st.userId) {
                     checked = true;
-                    studentTable->setCellWidget(i, 3, createStatusBadgeWidget(r.status));
+                    stTable->setCellWidget(i, 3, createStatusBadgeWidget(r.status));
                     auto *itemTime = new QTableWidgetItem(r.checkInTime.isValid() ? r.checkInTime.toString("HH:mm:ss") : "—");
                     itemTime->setTextAlignment(Qt::AlignCenter);
-                    studentTable->setItem(i, 4, itemTime);
+                    stTable->setItem(i, 4, itemTime);
                     break;
                 }
             }
@@ -1116,89 +1058,387 @@ QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)>
                 l->setContentsMargins(0, 0, 0, 0);
                 l->setAlignment(Qt::AlignCenter);
                 l->addWidget(badgeUnchecked);
-                studentTable->setCellWidget(i, 3, w);
+                stTable->setCellWidget(i, 3, w);
 
                 auto *itemTime = new QTableWidgetItem("—");
                 itemTime->setTextAlignment(Qt::AlignCenter);
-                studentTable->setItem(i, 4, itemTime);
+                stTable->setItem(i, 4, itemTime);
             }
         }
     };
 
-    refreshLiveTable();
+    auto renderView = std::make_shared<std::function<void(int)>>();
+    *renderView = [=, renderView, refreshLiveTable](int targetSessionId) {
+        while (auto *child = liveLayout->takeAt(0)) {
+            if (child->widget()) delete child->widget();
+            delete child;
+        }
+        *lblCodeNumberPtr = nullptr;
+        *lblBadgeLivePtr = nullptr;
+        *btnCloseSessionPtr = nullptr;
+        *cardPresentValPtr = nullptr;
+        *cardLateValPtr = nullptr;
+        *cardPendingValPtr = nullptr;
+        *studentTablePtr = nullptr;
+        enrolledStudentsList->clear();
 
-    // Zero-polling code rotation update
-    QObject::connect(&SessionService::instance(), &SessionService::codeRotated, page,
-        [sessId, codeNumber, refreshLiveTable](int rotatedSessId, const QString &newCode) {
-            if (rotatedSessId == sessId) {
-                codeNumber->setText(newCode);
-                refreshLiveTable();
+        CourseRepository courseRepo;
+        SessionRepository sessionRepo;
+        const auto taught = courseRepo.findByLecturer(userId);
+
+        std::optional<AttendanceSession> activeSession;
+        Course activeCourse;
+
+        if (targetSessionId > 0) {
+            auto sOpt = SessionService::instance().getSessionById(targetSessionId);
+            if (sOpt.has_value()) {
+                activeSession = sOpt;
+                for (const auto &c : taught) {
+                    if (c.courseId == sOpt->courseId) {
+                        activeCourse = c;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!activeSession.has_value()) {
+            for (const auto &c : taught) {
+                auto open = sessionRepo.findOpenSessionForCourse(c.courseId);
+                if (open.has_value()) {
+                    activeSession = open;
+                    activeCourse = c;
+                    break;
+                }
+            }
+        }
+
+        if (!activeSession.has_value()) {
+            *currentSessionId = 0;
+            auto *emptyCard = new QFrame;
+            emptyCard->setObjectName("overviewCard");
+            auto *emptyLay = new QVBoxLayout(emptyCard);
+            emptyLay->setContentsMargins(32, 36, 32, 36);
+            emptyLay->setSpacing(16);
+            emptyLay->setAlignment(Qt::AlignCenter);
+
+            auto *lblIcon = new QLabel("🕒");
+            lblIcon->setStyleSheet("font-size: 48px; background: transparent;");
+            lblIcon->setAlignment(Qt::AlignCenter);
+            emptyLay->addWidget(lblIcon);
+
+            auto *lblEmptyTitle = new QLabel("Hiện không có phiên điểm danh nào đang mở");
+            lblEmptyTitle->setStyleSheet("font-size: 18px; font-weight: 700; color: #112D55; background: transparent;");
+            lblEmptyTitle->setAlignment(Qt::AlignCenter);
+            emptyLay->addWidget(lblEmptyTitle);
+
+            auto *lblEmptySub = new QLabel("Hãy chọn lớp và mở phiên điểm danh mới để bắt đầu cấp mã cho sinh viên.");
+            lblEmptySub->setStyleSheet("font-size: 13px; color: #64748B; background: transparent;");
+            lblEmptySub->setAlignment(Qt::AlignCenter);
+            emptyLay->addWidget(lblEmptySub);
+
+            if (navCallback) {
+                auto *btnGoOpen = new QPushButton("Mở phiên điểm danh ngay →");
+                btnGoOpen->setObjectName("btnPrimary");
+                btnGoOpen->setCursor(Qt::PointingHandCursor);
+                btnGoOpen->setFixedWidth(240);
+                emptyLay->addWidget(btnGoOpen, 0, Qt::AlignCenter);
+                QObject::connect(btnGoOpen, &QPushButton::clicked, page, [navCallback] {
+                    navCallback("Open session");
+                });
+            }
+            liveLayout->addWidget(emptyCard);
+            liveLayout->addStretch();
+            return;
+        }
+
+        const int sessId = activeSession->sessionId;
+        *currentSessionId = sessId;
+        *activeCourseCode = activeCourse.code;
+        *activeCourseName = activeCourse.name;
+
+        *enrolledStudentsList = courseRepo.getEnrolledStudents(activeSession->courseId);
+        const int totalEnrolled = static_cast<int>(enrolledStudentsList->size());
+
+        // 1. Session Info & Giant Rotating Code Box
+        auto *sessionCard = new QFrame;
+        sessionCard->setObjectName("overviewCard");
+        auto *sLay = new QVBoxLayout(sessionCard);
+        sLay->setContentsMargins(24, 20, 24, 20);
+        sLay->setSpacing(14);
+
+        auto *cHeaderRow = new QHBoxLayout;
+        auto *cTitle = new QLabel(QString("Môn: %1 - %2 · Phiên #%3").arg(activeCourse.code, activeCourse.name).arg(sessId));
+        cTitle->setStyleSheet("font-size: 16px; font-weight: 700; color: #112D55; background: transparent;");
+        cHeaderRow->addWidget(cTitle);
+        cHeaderRow->addStretch();
+
+        auto *badgeLive = new QLabel(activeSession->status == SessionStatus::OPEN ? "● ĐANG DIỄN RA" : "● ĐÃ KẾT THÚC");
+        badgeLive->setStyleSheet(activeSession->status == SessionStatus::OPEN
+            ? "background: #DCFCE7; color: #15803D; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 4px 10px;"
+            : "background: #FEE2E2; color: #DC2626; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 4px 10px;");
+        cHeaderRow->addWidget(badgeLive);
+        *lblBadgeLivePtr = badgeLive;
+        sLay->addLayout(cHeaderRow);
+
+        auto *timeInfo = new QLabel(QString("Bắt đầu lúc: %1 | Đúng giờ: 0–%2p | Đi muộn: đến %3p | Thời lượng: %4p")
+            .arg(activeSession->startTime.toString("HH:mm:ss dd/MM/yyyy"))
+            .arg(activeSession->presentWindowMinutes)
+            .arg(activeSession->lateWindowMinutes)
+            .arg(activeSession->durationMinutes));
+        timeInfo->setStyleSheet("color: #64748B; font-size: 12px; background: transparent;");
+        sLay->addWidget(timeInfo);
+
+        // GIANT ROTATING CODE BOX
+        auto *codeBox = new QFrame;
+        codeBox->setObjectName("liveCodeBox");
+        auto *codeBoxLay = new QVBoxLayout(codeBox);
+        codeBoxLay->setContentsMargins(20, 18, 20, 18);
+        codeBoxLay->setSpacing(8);
+        codeBoxLay->setAlignment(Qt::AlignCenter);
+
+        auto *codeNumber = new QLabel(activeSession->status == SessionStatus::OPEN ? activeSession->sessionCode : "CLOSED");
+        codeNumber->setObjectName("liveCodeNumber");
+        codeNumber->setAlignment(Qt::AlignCenter);
+        codeBoxLay->addWidget(codeNumber);
+        *lblCodeNumberPtr = codeNumber;
+
+        auto *codeHint = new QLabel(activeSession->status == SessionStatus::OPEN
+            ? "🔄 Mã 6 số tự động cập nhật sau mỗi 60 giây. Sinh viên dùng mã này để xác nhận điểm danh."
+            : "⚠️ Phiên điểm danh này đã kết thúc.");
+        codeHint->setObjectName("liveCodeHint");
+        codeHint->setAlignment(Qt::AlignCenter);
+        codeBoxLay->addWidget(codeHint);
+
+        sLay->addWidget(codeBox);
+        liveLayout->addWidget(sessionCard);
+
+        // 2. Real-time Live Stats KPIs
+        auto *kpiRow = new QHBoxLayout;
+        kpiRow->setSpacing(16);
+
+        auto *cardPresent = createKpiCard("Đúng giờ (Present)", "0", "Sinh viên check-in đúng giờ", "#15803D");
+        auto *cardLate = createKpiCard("Đi muộn (Late)", "0", "Check-in trong cửa sổ muộn", "#D97706");
+        auto *cardPending = createKpiCard("Chưa điểm danh (Pending)", QString::number(totalEnrolled), "Sẽ ghi nhận Vắng nếu hết giờ", "#B91C1C");
+        auto *cardTotal = createKpiCard("Sĩ số (Enrolled)", QString::number(totalEnrolled), "Tổng sinh viên lớp học phần", "#112D55");
+
+        *cardPresentValPtr = cardPresent->findChild<QLabel*>("kpiValue");
+        *cardLateValPtr = cardLate->findChild<QLabel*>("kpiValue");
+        *cardPendingValPtr = cardPending->findChild<QLabel*>("kpiValue");
+
+        kpiRow->addWidget(cardPresent);
+        kpiRow->addWidget(cardLate);
+        kpiRow->addWidget(cardPending);
+        kpiRow->addWidget(cardTotal);
+        liveLayout->addLayout(kpiRow);
+
+        // 3. Student Check-in Status Table
+        auto *tableCard = new QFrame;
+        tableCard->setObjectName("overviewCard");
+        auto *tLay = new QVBoxLayout(tableCard);
+        tLay->setContentsMargins(20, 18, 20, 18);
+        tLay->setSpacing(12);
+
+        auto *tHeader = new QHBoxLayout;
+        auto *tTitle = new QLabel("Danh sách sinh viên & Trạng thái check-in");
+        tTitle->setObjectName("overviewCardTitle");
+        tHeader->addWidget(tTitle);
+        tHeader->addStretch();
+        tLay->addLayout(tHeader);
+
+        auto *studentTable = new QTableWidget;
+        studentTable->setColumnCount(5);
+        studentTable->setHorizontalHeaderLabels({"STT", "Mã SV", "Họ và tên", "Trạng thái", "Giờ check-in"});
+        studentTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+        studentTable->setColumnWidth(0, 50);
+        studentTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+        studentTable->setColumnWidth(1, 130);
+        studentTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+        studentTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
+        studentTable->setColumnWidth(3, 140);
+        studentTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Fixed);
+        studentTable->setColumnWidth(4, 150);
+        studentTable->verticalHeader()->setVisible(false);
+        studentTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        studentTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+        studentTable->setMinimumHeight(240);
+        tLay->addWidget(studentTable);
+        *studentTablePtr = studentTable;
+
+        // 4. Action Buttons (Close Session with Absent Confirmation)
+        auto *btnRow = new QHBoxLayout;
+        btnRow->setSpacing(14);
+
+        auto *btnCloseSession = new QPushButton("🛑 Đóng phiên điểm danh (Kết thúc)");
+        btnCloseSession->setObjectName("btnDanger");
+        btnCloseSession->setCursor(Qt::PointingHandCursor);
+        btnCloseSession->setEnabled(activeSession->status == SessionStatus::OPEN);
+        btnRow->addWidget(btnCloseSession);
+        *btnCloseSessionPtr = btnCloseSession;
+
+        if (navCallback) {
+            auto *btnReport = new QPushButton("Xem báo cáo chi tiết →");
+            btnReport->setObjectName("btnOutline");
+            btnReport->setCursor(Qt::PointingHandCursor);
+            btnRow->addWidget(btnReport);
+            QObject::connect(btnReport, &QPushButton::clicked, page, [navCallback] {
+                navCallback("Attendance report");
+            });
+        }
+        btnRow->addStretch();
+        tLay->addLayout(btnRow);
+
+        QObject::connect(btnCloseSession, &QPushButton::clicked, page, [=, refreshLiveTable] {
+            const auto recs = AttendanceRepository{}.findBySession(sessId);
+            int checkedCount = 0;
+            for (const auto &r : recs) {
+                if (r.status == AttendanceStatus::PRESENT || r.status == AttendanceStatus::LATE)
+                    checkedCount++;
+            }
+            int absentWillBe = totalEnrolled - checkedCount;
+            if (absentWillBe < 0) absentWillBe = 0;
+
+            const QString confirmMsg = QString(
+                "Bạn có chắc chắn muốn đóng phiên điểm danh #%1?\n\n"
+                "• Sĩ số lớp: %2 sinh viên\n"
+                "• Đã điểm danh: %3 sinh viên\n"
+                "• Chưa điểm danh: %4 sinh viên\n\n"
+                "⚠️ HỆ THỐNG SẼ TỰ ĐỘNG GHI NHẬN VẮNG (ABSENT) CHO %4 SINH VIÊN CHƯA CHECK-IN.")
+                .arg(sessId).arg(totalEnrolled).arg(checkedCount).arg(absentWillBe);
+
+            const auto reply = QMessageBox::question(page, "Xác nhận đóng phiên điểm danh",
+                confirmMsg, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+            if (reply == QMessageBox::Yes) {
+                const auto res = SessionService::instance().closeSession(sessId);
+                if (res.ok) {
+                    QMessageBox::information(page, "Đã đóng phiên điểm danh",
+                        QString("Phiên điểm danh #%1 đã đóng thành công.\n%2 sinh viên đã được ghi nhận vắng.")
+                            .arg(sessId).arg(absentWillBe));
+                    if (*lblBadgeLivePtr) {
+                        (*lblBadgeLivePtr)->setText("● ĐÃ KẾT THÚC");
+                        (*lblBadgeLivePtr)->setStyleSheet("background: #FEE2E2; color: #DC2626; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 4px 10px;");
+                    }
+                    if (*lblCodeNumberPtr) (*lblCodeNumberPtr)->setText("CLOSED");
+                    if (*btnCloseSessionPtr) (*btnCloseSessionPtr)->setEnabled(false);
+                    if (refreshLiveTable && *refreshLiveTable) (*refreshLiveTable)();
+                    if (navCallback) {
+                        navCallback("Attendance report");
+                    }
+                } else {
+                    QMessageBox::warning(page, "Lỗi", res.message);
+                }
             }
         });
 
-    // 4. Action Buttons (Close Session with Absent Confirmation)
-    auto *btnRow = new QHBoxLayout;
-    btnRow->setSpacing(14);
+        liveLayout->addWidget(tableCard);
+        liveLayout->addStretch();
 
-    auto *btnCloseSession = new QPushButton("🛑 Đóng phiên điểm danh (Kết thúc)");
-    btnCloseSession->setObjectName("btnDanger");
-    btnCloseSession->setCursor(Qt::PointingHandCursor);
-    btnRow->addWidget(btnCloseSession);
+        // Initial table load
+        if (refreshLiveTable && *refreshLiveTable) (*refreshLiveTable)();
+    };
 
-    if (navCallback) {
-        auto *btnReport = new QPushButton("Xem báo cáo chi tiết →");
-        btnReport->setObjectName("btnOutline");
-        btnReport->setCursor(Qt::PointingHandCursor);
-        btnRow->addWidget(btnReport);
-        QObject::connect(btnReport, &QPushButton::clicked, page, [navCallback] {
-            navCallback("Attendance report");
-        });
-    }
-    btnRow->addStretch();
-    tLay->addLayout(btnRow);
+    // Initial render
+    (*renderView)(0);
 
-    QObject::connect(btnCloseSession, &QPushButton::clicked, page, [=] {
-        const auto recs = AttendanceRepository{}.findBySession(sessId);
-        int checkedCount = 0;
-        for (const auto &r : recs) {
-            if (r.status == AttendanceStatus::PRESENT || r.status == AttendanceStatus::LATE)
-                checkedCount++;
-        }
-        int absentWillBe = totalEnrolled - checkedCount;
-        if (absentWillBe < 0) absentWillBe = 0;
-
-        const QString confirmMsg = QString(
-            "Bạn có chắc chắn muốn đóng phiên điểm danh #%1?\n\n"
-            "• Sĩ số lớp: %2 sinh viên\n"
-            "• Đã điểm danh: %3 sinh viên\n"
-            "• Chưa điểm danh: %4 sinh viên\n\n"
-            "⚠️ HỆ THỐNG SẼ TỰ ĐỘNG GHI NHẬN VẮNG (ABSENT) CHO %4 SINH VIÊN CHƯA CHECK-IN.")
-            .arg(sessId).arg(totalEnrolled).arg(checkedCount).arg(absentWillBe);
-
-        const auto reply = QMessageBox::question(page, "Xác nhận đóng phiên điểm danh",
-            confirmMsg, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-
-        if (reply == QMessageBox::Yes) {
-            const auto res = SessionService::instance().closeSession(sessId);
-            if (res.ok) {
-                QMessageBox::information(page, "Đã đóng phiên điểm danh",
-                    QString("Phiên điểm danh #%1 đã đóng thành công.\n%2 sinh viên đã được ghi nhận vắng.")
-                        .arg(sessId).arg(absentWillBe));
-                if (navCallback) {
-                    navCallback("Attendance report");
+    // Signal connections:
+    QObject::connect(&SessionService::instance(), &SessionService::sessionOpened, page, [=, renderView](int newSessId) {
+        CourseRepository cr;
+        const auto taught = cr.findByLecturer(userId);
+        auto sessOpt = SessionService::instance().getSessionById(newSessId);
+        if (sessOpt.has_value()) {
+            for (const auto &c : taught) {
+                if (c.courseId == sessOpt->courseId) {
+                    (*renderView)(newSessId);
+                    break;
                 }
-            } else {
-                QMessageBox::warning(page, "Lỗi", res.message);
             }
         }
     });
 
-    pageLayout->addWidget(tableCard);
-    pageLayout->addStretch();
+    QObject::connect(&SessionService::instance(), &SessionService::codeRotated, page,
+        [=, refreshLiveTable](int rotatedSessId, const QString &newCode) {
+            if (*currentSessionId == rotatedSessId) {
+                if (*lblCodeNumberPtr) (*lblCodeNumberPtr)->setText(newCode);
+                if (refreshLiveTable && *refreshLiveTable) (*refreshLiveTable)();
+            }
+        });
+
+    QObject::connect(&SessionService::instance(), &SessionService::sessionClosed, page,
+        [=, refreshLiveTable](int closedSessId) {
+            if (*currentSessionId == closedSessId) {
+                if (*lblBadgeLivePtr) {
+                    (*lblBadgeLivePtr)->setText("● ĐÃ KẾT THÚC");
+                    (*lblBadgeLivePtr)->setStyleSheet("background: #FEE2E2; color: #DC2626; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 4px 10px;");
+                }
+                if (*lblCodeNumberPtr) (*lblCodeNumberPtr)->setText("CLOSED");
+                if (*btnCloseSessionPtr) (*btnCloseSessionPtr)->setEnabled(false);
+                if (refreshLiveTable && *refreshLiveTable) (*refreshLiveTable)();
+            }
+        });
+
+    // 1500ms Polling Timer
+    auto *livePollTimer = new QTimer(page);
+    livePollTimer->setInterval(1500);
+    QObject::connect(livePollTimer, &QTimer::timeout, page, [=, renderView, refreshLiveTable]() {
+        if (!page->isVisible()) return;
+
+        if (*currentSessionId > 0) {
+            const auto sOpt = SessionService::instance().getSessionById(*currentSessionId);
+            if (!sOpt.has_value() || sOpt->status == SessionStatus::CLOSED) {
+                if (*lblBadgeLivePtr && (*lblBadgeLivePtr)->text() != "● ĐÃ KẾT THÚC") {
+                    (*lblBadgeLivePtr)->setText("● ĐÃ KẾT THÚC");
+                    (*lblBadgeLivePtr)->setStyleSheet("background: #FEE2E2; color: #DC2626; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 4px 10px;");
+                }
+                if (*lblCodeNumberPtr && (*lblCodeNumberPtr)->text() != "CLOSED") {
+                    (*lblCodeNumberPtr)->setText("CLOSED");
+                }
+                if (*btnCloseSessionPtr && (*btnCloseSessionPtr)->isEnabled()) {
+                    (*btnCloseSessionPtr)->setEnabled(false);
+                }
+                if (refreshLiveTable && *refreshLiveTable) (*refreshLiveTable)();
+            } else {
+                if (*lblCodeNumberPtr && (*lblCodeNumberPtr)->text() != sOpt->sessionCode) {
+                    (*lblCodeNumberPtr)->setText(sOpt->sessionCode);
+                }
+                if (refreshLiveTable && *refreshLiveTable) (*refreshLiveTable)();
+            }
+        } else {
+            CourseRepository cr;
+            SessionRepository sr;
+            const auto taught = cr.findByLecturer(userId);
+            for (const auto &c : taught) {
+                auto open = sr.findOpenSessionForCourse(c.courseId);
+                if (open.has_value()) {
+                    (*renderView)(open->sessionId);
+                    break;
+                }
+            }
+        }
+    });
+    livePollTimer->start();
+
+    if (shell) {
+        QObject::connect(shell, &AppShell::pageChanged, page, [=, renderView, refreshLiveTable](const QString &cur) {
+            if (cur == "Live session") {
+                if (*currentSessionId > 0) {
+                    const auto sOpt = SessionService::instance().getSessionById(*currentSessionId);
+                    if (!sOpt.has_value() || sOpt->status == SessionStatus::CLOSED) {
+                        (*renderView)(0);
+                    } else {
+                        if (refreshLiveTable && *refreshLiveTable) (*refreshLiveTable)();
+                    }
+                } else {
+                    (*renderView)(0);
+                }
+            }
+        });
+    }
+
     return page;
 }
 
-QWidget *lecturerReportPage(int userId) {
+QWidget *lecturerReportPage(int userId, AppShell *shell = nullptr) {
     auto *page = new QWidget;
     auto *pageLayout = new QVBoxLayout(page);
     pageLayout->setContentsMargins(32, 28, 32, 28);
@@ -1310,8 +1550,8 @@ QWidget *lecturerReportPage(int userId) {
     pageLayout->addWidget(tableCard);
 
     // Refresh function
-    std::function<void()> refreshSessionData;
-    refreshSessionData = [=, &refreshSessionData] {
+    auto refreshSessionData = std::make_shared<std::function<void()>>();
+    *refreshSessionData = [=, refreshSessionData] {
         if (sessionCombo->currentIndex() < 0) {
             table->setRowCount(0);
             return;
@@ -1374,7 +1614,7 @@ QWidget *lecturerReportPage(int userId) {
             lBtn->addWidget(btnEdit);
             table->setCellWidget(i, 5, wBtn);
 
-            QObject::connect(btnEdit, &QPushButton::clicked, page, [=, &refreshSessionData, recordId = r.recordId, curStatus = r.status, sName = r.studentName, sCode = r.studentCode] {
+            QObject::connect(btnEdit, &QPushButton::clicked, page, [=, refreshSessionData, recordId = r.recordId, curStatus = r.status, sName = r.studentName, sCode = r.studentCode] {
                 auto *dlg = new QDialog(page);
                 dlg->setWindowTitle("Điều chỉnh trạng thái điểm danh");
                 dlg->setFixedWidth(420);
@@ -1413,7 +1653,7 @@ QWidget *lecturerReportPage(int userId) {
                 dLay->addLayout(btnBox);
 
                 QObject::connect(btnCancel, &QPushButton::clicked, dlg, &QDialog::reject);
-                QObject::connect(btnSave, &QPushButton::clicked, dlg, [=, &refreshSessionData] {
+                QObject::connect(btnSave, &QPushButton::clicked, dlg, [=, refreshSessionData] {
                     const QString reason = reasonEdit->toPlainText().trimmed();
                     if (reason.isEmpty()) {
                         QMessageBox::warning(dlg, "Thiếu thông tin", "Vui lòng nhập lý do điều chỉnh để lưu vào lịch sử kiểm toán học vụ.");
@@ -1423,7 +1663,7 @@ QWidget *lecturerReportPage(int userId) {
                     const bool ok = AttendanceService::instance().editRecordStatus(recordId, selectedStatus, userId, reason);
                     if (ok) {
                         dlg->accept();
-                        refreshSessionData();
+                        if (refreshSessionData && *refreshSessionData) (*refreshSessionData)();
                     } else {
                         QMessageBox::warning(dlg, "Lỗi", "Không thể cập nhật trạng thái điểm danh.");
                     }
@@ -1435,28 +1675,63 @@ QWidget *lecturerReportPage(int userId) {
     };
 
     // Populate sessions when course changes
-    auto populateSessionsForCourse = [=](int courseId) {
+    auto populateSessionsForCourse = std::make_shared<std::function<void(int, int)>>();
+    *populateSessionsForCourse = [=, populateSessionsForCourse, refreshSessionData](int courseId, int preferredSessionId) {
+        const int oldId = (preferredSessionId > 0) ? preferredSessionId : sessionCombo->currentData().toInt();
+        sessionCombo->blockSignals(true);
         sessionCombo->clear();
         const auto sessions = SessionRepository{}.findByCourse(courseId);
-        for (const auto &s : sessions) {
+        int selectIdx = -1;
+        for (int i = 0; i < static_cast<int>(sessions.size()); ++i) {
+            const auto &s = sessions[i];
             const QString stStr = (s.status == SessionStatus::OPEN) ? "ĐANG MỞ" : "ĐÃ ĐÓNG";
             sessionCombo->addItem(QString("Phiên #%1 · %2 (%3)")
                 .arg(s.sessionId).arg(s.startTime.toString("dd/MM/yyyy HH:mm")).arg(stStr), s.sessionId);
+            if (s.sessionId == oldId) {
+                selectIdx = i;
+            }
         }
-        refreshSessionData();
+        sessionCombo->blockSignals(false);
+        if (selectIdx != -1) {
+            sessionCombo->setCurrentIndex(selectIdx);
+        } else if (sessionCombo->count() > 0) {
+            sessionCombo->setCurrentIndex(0);
+        }
+        if (refreshSessionData && *refreshSessionData) (*refreshSessionData)();
     };
 
-    QObject::connect(courseCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=](int) {
-        populateSessionsForCourse(courseCombo->currentData().toInt());
+    QObject::connect(courseCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, populateSessionsForCourse](int) {
+        if (populateSessionsForCourse && *populateSessionsForCourse) {
+            (*populateSessionsForCourse)(courseCombo->currentData().toInt(), 0);
+        }
     });
 
-    QObject::connect(sessionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=](int) {
-        refreshSessionData();
+    QObject::connect(sessionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, refreshSessionData](int) {
+        if (refreshSessionData && *refreshSessionData) (*refreshSessionData)();
     });
 
-    QObject::connect(searchEdit, &QLineEdit::textChanged, page, [=](const QString&) {
-        refreshSessionData();
+    QObject::connect(searchEdit, &QLineEdit::textChanged, page, [=, refreshSessionData](const QString&) {
+        if (refreshSessionData && *refreshSessionData) (*refreshSessionData)();
     });
+
+    QObject::connect(&SessionService::instance(), &SessionService::sessionOpened, page, [=, populateSessionsForCourse](int newSessId) {
+        if (courseCombo->currentIndex() >= 0 && populateSessionsForCourse && *populateSessionsForCourse) {
+            (*populateSessionsForCourse)(courseCombo->currentData().toInt(), newSessId);
+        }
+    });
+    QObject::connect(&SessionService::instance(), &SessionService::sessionClosed, page, [=, populateSessionsForCourse](int closedSessId) {
+        if (courseCombo->currentIndex() >= 0 && populateSessionsForCourse && *populateSessionsForCourse) {
+            (*populateSessionsForCourse)(courseCombo->currentData().toInt(), closedSessId);
+        }
+    });
+
+    if (shell) {
+        QObject::connect(shell, &AppShell::pageChanged, page, [=, populateSessionsForCourse](const QString &cur) {
+            if (cur == "Attendance report" && courseCombo->currentIndex() >= 0 && populateSessionsForCourse && *populateSessionsForCourse) {
+                (*populateSessionsForCourse)(courseCombo->currentData().toInt(), 0);
+            }
+        });
+    }
 
     // Audit logs viewer dialog
     QObject::connect(btnAuditLogs, &QPushButton::clicked, page, [=] {
@@ -1519,7 +1794,9 @@ QWidget *lecturerReportPage(int userId) {
     });
 
     if (!taught.empty()) {
-        populateSessionsForCourse(taught.front().courseId);
+        if (populateSessionsForCourse && *populateSessionsForCourse) {
+            (*populateSessionsForCourse)(taught.front().courseId, 0);
+        }
     }
 
     pageLayout->addStretch();
@@ -1699,8 +1976,8 @@ QWidget *adminAccountsPage() {
     pageLayout->addWidget(createCard);
 
     // Refresh function
-    std::function<void()> refreshAccounts;
-    refreshAccounts = [=, &refreshAccounts]() {
+    auto refreshAccounts = std::make_shared<std::function<void()>>();
+    *refreshAccounts = [=, refreshAccounts]() {
         const auto all = UserRepository{}.findAll();
         int stu = 0, lec = 0, act = 0;
         for (const auto &u : all) {
@@ -1758,7 +2035,7 @@ QWidget *adminAccountsPage() {
             lBtn->addWidget(btnAction);
             table->setCellWidget(i, 6, wBtn);
 
-            QObject::connect(btnAction, &QPushButton::clicked, page, [=, &refreshAccounts, targetId = u.userId, isActive = u.isActive, targetName = u.fullName] {
+            QObject::connect(btnAction, &QPushButton::clicked, page, [=, refreshAccounts, targetId = u.userId, isActive = u.isActive, targetName = u.fullName] {
                 if (isActive) {
                     const auto reply = QMessageBox::question(page, "Xác nhận vô hiệu hóa",
                         QString("Bạn có chắc chắn muốn vô hiệu hóa tài khoản '%1'? Người dùng này sẽ không thể đăng nhập vào hệ thống.").arg(targetName),
@@ -1766,7 +2043,7 @@ QWidget *adminAccountsPage() {
                     if (reply == QMessageBox::Yes) {
                         const auto res = AccountService::deactivate(targetId);
                         if (res.ok) {
-                            refreshAccounts();
+                            if (refreshAccounts && *refreshAccounts) (*refreshAccounts)();
                         } else {
                             QMessageBox::warning(page, "Lỗi", res.message);
                         }
@@ -1778,7 +2055,7 @@ QWidget *adminAccountsPage() {
                     if (reply == QMessageBox::Yes) {
                         const auto res = AccountService::reactivate(targetId);
                         if (res.ok) {
-                            refreshAccounts();
+                            if (refreshAccounts && *refreshAccounts) (*refreshAccounts)();
                         } else {
                             QMessageBox::warning(page, "Lỗi", res.message);
                         }
@@ -1788,12 +2065,18 @@ QWidget *adminAccountsPage() {
         }
     };
 
-    QObject::connect(searchEdit, &QLineEdit::textChanged, page, [=, &refreshAccounts] { refreshAccounts(); });
-    QObject::connect(roleCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, &refreshAccounts] { refreshAccounts(); });
-    QObject::connect(statusCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, &refreshAccounts] { refreshAccounts(); });
+    QObject::connect(searchEdit, &QLineEdit::textChanged, page, [=, refreshAccounts] {
+        if (refreshAccounts && *refreshAccounts) (*refreshAccounts)();
+    });
+    QObject::connect(roleCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, refreshAccounts] {
+        if (refreshAccounts && *refreshAccounts) (*refreshAccounts)();
+    });
+    QObject::connect(statusCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), page, [=, refreshAccounts] {
+        if (refreshAccounts && *refreshAccounts) (*refreshAccounts)();
+    });
 
     // Create Account action
-    QObject::connect(btnCreate, &QPushButton::clicked, page, [=, &refreshAccounts] {
+    QObject::connect(btnCreate, &QPushButton::clicked, page, [=, refreshAccounts] {
         const QString roleStr = inRole->currentText();
         const QString codeStr = inCode->text().trimmed();
         const QString nameStr = inName->text().trimmed();
@@ -1814,14 +2097,14 @@ QWidget *adminAccountsPage() {
             inName->clear();
             inEmail->clear();
             inPassword->clear();
-            refreshAccounts();
+            if (refreshAccounts && *refreshAccounts) (*refreshAccounts)();
         } else {
             lblCreateMsg->setText("❌ " + res.message);
             lblCreateMsg->setStyleSheet("color: #DC2626; font-weight: 600;");
         }
     });
 
-    refreshAccounts();
+    if (refreshAccounts && *refreshAccounts) (*refreshAccounts)();
     pageLayout->addStretch();
     return page;
 }
@@ -1935,8 +2218,8 @@ QWidget *adminCoursesPage() {
     pageLayout->addWidget(createCard);
 
     // Refresh function
-    std::function<void()> refreshCourses;
-    refreshCourses = [=, &refreshCourses]() {
+    auto refreshCourses = std::make_shared<std::function<void()>>();
+    *refreshCourses = [=, refreshCourses]() {
         const auto allCourses = CourseRepository{}.findAll();
         int totalEnroll = 0;
         int totalSess = 0;
@@ -1991,7 +2274,7 @@ QWidget *adminCoursesPage() {
             table->setCellWidget(i, 6, actBox);
 
             // Manage Students Dialog
-            QObject::connect(btnManage, &QPushButton::clicked, page, [=, &refreshCourses, targetCourseId = c.courseId, courseTitle = QString("%1 - %2").arg(c.code, c.name)] {
+            QObject::connect(btnManage, &QPushButton::clicked, page, [=, refreshCourses, targetCourseId = c.courseId, courseTitle = QString("%1 - %2").arg(c.code, c.name)] {
                 auto *dlg = new QDialog(page);
                 dlg->setWindowTitle("Quản lý danh sách sinh viên - " + courseTitle);
                 dlg->resize(650, 480);
@@ -2043,12 +2326,12 @@ QWidget *adminCoursesPage() {
                 sTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
                 dlgLay->addWidget(sTable);
 
-                std::function<void()> refreshDlgTable;
-                refreshDlgTable = [=, &currentEnrolled, &refreshDlgTable, &refreshCourses]() mutable {
-                    currentEnrolled = CourseRepository{}.getEnrolledStudents(targetCourseId);
-                    sTable->setRowCount(static_cast<int>(currentEnrolled.size()));
-                    for (int j = 0; j < static_cast<int>(currentEnrolled.size()); ++j) {
-                        const auto &st = currentEnrolled[j];
+                auto refreshDlgTable = std::make_shared<std::function<void()>>();
+                *refreshDlgTable = [=, refreshDlgTable, refreshCourses]() mutable {
+                    const auto updatedEnrolled = CourseRepository{}.getEnrolledStudents(targetCourseId);
+                    sTable->setRowCount(static_cast<int>(updatedEnrolled.size()));
+                    for (int j = 0; j < static_cast<int>(updatedEnrolled.size()); ++j) {
+                        const auto &st = updatedEnrolled[j];
                         sTable->setItem(j, 0, new QTableWidgetItem(QString::number(j + 1)));
                         sTable->setItem(j, 1, new QTableWidgetItem(st.code));
                         sTable->setItem(j, 2, new QTableWidgetItem(st.fullName));
@@ -2063,29 +2346,29 @@ QWidget *adminCoursesPage() {
                         lw->addWidget(btnUnenroll);
                         sTable->setCellWidget(j, 3, w);
 
-                        QObject::connect(btnUnenroll, &QPushButton::clicked, dlg, [=, &refreshDlgTable, &refreshCourses, sId = st.userId, sName = st.fullName] {
+                        QObject::connect(btnUnenroll, &QPushButton::clicked, dlg, [=, refreshDlgTable, refreshCourses, sId = st.userId, sName = st.fullName] {
                             const auto reply = QMessageBox::question(dlg, "Xác nhận hủy ghi danh",
                                 QString("Xác nhận hủy ghi danh sinh viên '%1' khỏi môn học này?").arg(sName),
                                 QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
                             if (reply == QMessageBox::Yes) {
                                 CourseService::unenrollStudent(targetCourseId, sId);
-                                refreshDlgTable();
-                                refreshCourses();
+                                if (refreshDlgTable && *refreshDlgTable) (*refreshDlgTable)();
+                                if (refreshCourses && *refreshCourses) (*refreshCourses)();
                             }
                         });
                     }
                 };
 
-                refreshDlgTable();
+                if (refreshDlgTable && *refreshDlgTable) (*refreshDlgTable)();
 
-                QObject::connect(btnAddStudent, &QPushButton::clicked, dlg, [=, &refreshDlgTable, &refreshCourses]() mutable {
+                QObject::connect(btnAddStudent, &QPushButton::clicked, dlg, [=, refreshDlgTable, refreshCourses]() mutable {
                     if (studentCombo->currentIndex() < 0) return;
                     const int sId = studentCombo->currentData().toInt();
                     const auto res = CourseService::enrollStudent(targetCourseId, sId);
                     if (res.ok) {
                         studentCombo->removeItem(studentCombo->currentIndex());
-                        refreshDlgTable();
-                        refreshCourses();
+                        if (refreshDlgTable && *refreshDlgTable) (*refreshDlgTable)();
+                        if (refreshCourses && *refreshCourses) (*refreshCourses)();
                     } else {
                         QMessageBox::warning(dlg, "Lỗi", res.message);
                     }
@@ -2100,7 +2383,7 @@ QWidget *adminCoursesPage() {
             });
 
             // Delete Course logic
-            QObject::connect(btnDelete, &QPushButton::clicked, page, [=, &refreshCourses, targetCourseId = c.courseId, courseTitle = QString("%1 - %2").arg(c.code, c.name)] {
+            QObject::connect(btnDelete, &QPushButton::clicked, page, [=, refreshCourses, targetCourseId = c.courseId, courseTitle = QString("%1 - %2").arg(c.code, c.name)] {
                 if (CourseRepository{}.hasSessions(targetCourseId)) {
                     QMessageBox::warning(page, "Không thể xóa học phần",
                         QString("Học phần '%1' đã có các phiên điểm danh trong hệ thống.\n\n"
@@ -2116,7 +2399,7 @@ QWidget *adminCoursesPage() {
                 if (reply == QMessageBox::Yes) {
                     const auto res = CourseService::deleteCourse(targetCourseId);
                     if (res.ok) {
-                        refreshCourses();
+                        if (refreshCourses && *refreshCourses) (*refreshCourses)();
                     } else {
                         QMessageBox::warning(page, "Lỗi", res.message);
                     }
@@ -2126,7 +2409,7 @@ QWidget *adminCoursesPage() {
     };
 
     // Create course button logic
-    QObject::connect(btnCreate, &QPushButton::clicked, page, [=, &refreshCourses] {
+    QObject::connect(btnCreate, &QPushButton::clicked, page, [=, refreshCourses] {
         const QString codeStr = inCode->text().trimmed();
         const QString nameStr = inName->text().trimmed();
         if (codeStr.isEmpty() || nameStr.isEmpty()) {
@@ -2146,14 +2429,14 @@ QWidget *adminCoursesPage() {
             lblCreateMsg->setStyleSheet("color: #15803D; font-weight: 600;");
             inCode->clear();
             inName->clear();
-            refreshCourses();
+            if (refreshCourses && *refreshCourses) (*refreshCourses)();
         } else {
             lblCreateMsg->setText("❌ " + res.message);
             lblCreateMsg->setStyleSheet("color: #DC2626; font-weight: 600;");
         }
     });
 
-    refreshCourses();
+    if (refreshCourses && *refreshCourses) (*refreshCourses)();
     pageLayout->addStretch();
     return page;
 }
@@ -2298,8 +2581,8 @@ QWidget *adminTimetablePage() {
     pageLayout->addWidget(addCard);
 
     // Refresh function
-    std::function<void()> refreshSchedules;
-    refreshSchedules = [=, &refreshSchedules]() {
+    auto refreshSchedules = std::make_shared<std::function<void()>>();
+    *refreshSchedules = [=, refreshSchedules]() {
         const auto entries = TimetableService::instance().getAllSchedules();
         table->setRowCount(static_cast<int>(entries.size()));
 
@@ -2319,7 +2602,7 @@ QWidget *adminTimetablePage() {
             table->setItem(i, 4, new QTableWidgetItem(QString("%1 - %2")
                 .arg(e.startTime.toString("HH:mm")).arg(e.endTime.toString("HH:mm"))));
 
-            table->setItem(i, 5, new QTableWidgetItem(e.room.isEmpty() ? "ONLINE" : e.room));
+            table->setItem(i, 5, new QTableWidgetItem(cleanRoomName(e.room)));
 
             table->setItem(i, 6, new QTableWidgetItem(QString("%1 → %2")
                 .arg(e.startDate.toString("dd/MM/yyyy")).arg(e.endDate.toString("dd/MM/yyyy"))));
@@ -2334,20 +2617,20 @@ QWidget *adminTimetablePage() {
             lw->addWidget(btnDel);
             table->setCellWidget(i, 7, w);
 
-            QObject::connect(btnDel, &QPushButton::clicked, page, [=, &refreshSchedules, sId = e.scheduleId, cName = e.courseName, dow = dowStr] {
+            QObject::connect(btnDel, &QPushButton::clicked, page, [=, refreshSchedules, sId = e.scheduleId, cName = e.courseName, dow = dowStr] {
                 const auto reply = QMessageBox::question(page, "Xác nhận xóa lịch học",
                     QString("Bạn có chắc chắn muốn xóa lịch '%1' (%2)?").arg(cName, dow),
                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
                 if (reply == QMessageBox::Yes) {
                     TimetableService::instance().deleteSchedule(sId);
-                    refreshSchedules();
+                    if (refreshSchedules && *refreshSchedules) (*refreshSchedules)();
                 }
             });
         }
     };
 
     // Add schedule button logic
-    QObject::connect(btnAdd, &QPushButton::clicked, page, [=, &refreshSchedules] {
+    QObject::connect(btnAdd, &QPushButton::clicked, page, [=, refreshSchedules] {
         if (courseBox->currentIndex() < 0) return;
         if (startEdit->time() >= endEdit->time()) {
             lblAddMsg->setText("⚠️ Giờ bắt đầu phải nhỏ hơn giờ kết thúc.");
@@ -2375,14 +2658,14 @@ QWidget *adminTimetablePage() {
             lblAddMsg->setText("✓ " + res.message);
             lblAddMsg->setStyleSheet("color: #15803D; font-weight: 600;");
             roomEdit->clear();
-            refreshSchedules();
+            if (refreshSchedules && *refreshSchedules) (*refreshSchedules)();
         } else {
             lblAddMsg->setText("❌ " + res.message);
             lblAddMsg->setStyleSheet("color: #DC2626; font-weight: 600;");
         }
     });
 
-    refreshSchedules();
+    if (refreshSchedules && *refreshSchedules) (*refreshSchedules)();
     pageLayout->addStretch();
     return page;
 }
@@ -3059,19 +3342,19 @@ void UiLauncher::openShellFor(const QString &) {
         if (user->role == UserRole::LECTURER && p == "Overview") {
             m_shell->addPage(p, lecturerOverviewPage(user->userId, [this](const QString &target) {
                 if (m_shell) m_shell->setCurrentPage(target);
-            }));
+            }, m_shell));
         } else if (user->role == UserRole::LECTURER && p == "Timetable") {
             m_shell->addPage(p, lecturerTimetablePage(user->userId));
         } else if (user->role == UserRole::LECTURER && p == "Open session") {
             m_shell->addPage(p, lecturerOpenSessionPage(user->userId, [this](const QString &target) {
                 if (m_shell) m_shell->setCurrentPage(target);
-            }));
+            }, m_shell));
         } else if (user->role == UserRole::LECTURER && p == "Live session") {
             m_shell->addPage(p, lecturerLiveSessionPage(user->userId, [this](const QString &target) {
                 if (m_shell) m_shell->setCurrentPage(target);
-            }));
+            }, m_shell));
         } else if (user->role == UserRole::LECTURER && p == "Attendance report") {
-            m_shell->addPage(p, lecturerReportPage(user->userId));
+            m_shell->addPage(p, lecturerReportPage(user->userId, m_shell));
         } else if (user->role == UserRole::ADMIN && p == "Accounts") {
             m_shell->addPage(p, adminAccountsPage());
         } else if (user->role == UserRole::ADMIN && p == "Courses") {

@@ -22,6 +22,7 @@ public:
 signals:
     void signOutRequested();
     void changePasswordRequested();
+    void pageChanged(const QString &pageName);
 
 private:
     QWidget *buildSidebar(Role role);

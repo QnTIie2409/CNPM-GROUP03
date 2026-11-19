@@ -57,7 +57,59 @@ The UI owner should implement these changes:
 No files under `ui/` were edited in this backend change. UI handoff is required
 to fix the stale Live session screen completely.
 
-## Backend regression test
+## Additional UI findings from source review (2026-11-19)
+
+- `lecturerOverviewPage` renders the first open session's code once. Its
+  `lblCodeNow` is not subscribed to code changes. Refresh this label too.
+- `lecturerOpenSessionPage` captures the local `std::function`
+  `checkCourseOpenSession` by reference in stored callbacks. That variable is
+  destroyed when the factory returns. Calling it on a later click/course
+  change is undefined behavior. Move refresh logic into a page QObject slot
+  (preferred); do not capture local function variables by reference.
+- The same lifetime bug occurs with `refreshSessionData` in
+  `lecturerReportPage` and `refreshAccounts` in account management. Audit all
+  stored callbacks using `&refresh...` and replace them with page-owned slots.
+- Report session choices are fetched at construction and course changes only.
+  Re-fetch on page entry and sessionOpened/sessionClosed; preserve the selected
+  session ID and select the newly opened/closed session when navigating from
+  Live session. The repository already returns both OPEN and CLOSED sessions.
+- Closing a live session currently navigates to an existing report widget;
+  navigation alone does not reload either page. On success disable the old
+  session controls and refresh Live, Open session, Overview and Report.
+- Poll visible live data every 1-2 seconds for other app instances. Refresh
+  code/status/roster independently; keep UI changes on the GUI thread and
+  attach timers/connections to the page lifetime.
+
+Observed local DB evidence: session #23 code generation timestamp advanced
+from 21:27:28 to 21:28:28 and its code changed. The screen retaining the old
+code is therefore a UI synchronization problem in this reproduction.
+The row was still OPEN when inspected; the close action's actual session ID
+and return value need to be checked rather than assuming a successful close.
+
+## Lecturer assignment data inconsistency
+
+Current seed assigns all five courses to lecturer user_id=2 (Tran Minh Quan).
+Lecturer user_id=3 (Nguyen Thu Ha) consequently has no course timetable.
+Nine historical/sample sessions belong to user_id=3 on courses currently
+assigned to user_id=2. This may represent reassignment, but seed needs an
+explicit consistent teaching allocation for testing. Confirm the intended
+course allocation before changing current lecturer ownership; do not reset
+seed or rewrite attendance history to hide this mismatch.
+
+## Manual acceptance sequence for UI owner
+
+1. Login Lecturer, open a course session and store the returned session ID.
+2. Navigate to Live: same ID/code as MySQL, no stale empty state.
+3. Wait a full 60-second code interval: code changes in MySQL and on screen.
+4. Student checks in from a second instance: roster refreshes within polling
+   interval, independently of code rotation.
+5. Close the displayed ID: inspect ServiceResult; on success MySQL is CLOSED,
+   old code is hidden and controls are disabled.
+6. Navigate to Report: the same session appears as CLOSED with final records.
+7. Navigate to Open session: course is unblocked; create a different session
+   ID and repeat without logout/restart.
+
+## Running the backend regression test
 
 ```powershell
 cmake -S database/tests -B build/session-tests -G Ninja -DCMAKE_PREFIX_PATH=C:/Qt/6.12.0/mingw_64

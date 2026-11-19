@@ -198,7 +198,9 @@ void AppShell::addPage(const QString &navText, QWidget *page) {
 
 void AppShell::showPage(int index) {
     m_stack->setCurrentIndex(index);
-    m_breadcrumb->setText("Academic operations / " + m_titles.value(index));
+    const QString title = m_titles.value(index);
+    m_breadcrumb->setText("Academic operations / " + title);
+    emit pageChanged(title);
 }
 
 void AppShell::setCurrentPage(int index) {
