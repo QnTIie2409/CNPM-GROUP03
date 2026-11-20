@@ -1,5 +1,28 @@
 # Session backend and Live session integration
 
+## Password change
+
+```cpp
+bool AuthService::changePassword(const QString &currentPassword,
+                                 const QString &newPassword);
+```
+
+The logged-in user must provide the current password. The service requires a
+new password of at least six characters, rejects an unchanged password,
+creates a new salted PBKDF2 hash, updates the active user's row and refreshes
+the in-memory user hash. The UI should show `AuthService::lastError()` when
+the operation fails.
+
+## Excuse requests
+
+The current Requirement Document excludes student excuse requests. FR-08
+allows a Lecturer to set `EXCUSED` directly while correcting attendance. The
+existing Student excuse dialog is therefore informational only and must not
+claim that a request was submitted or notify a Lecturer. A real request flow
+requires a new FR, a request table and repository/service, request status and
+reason fields, Lecturer notification/list UI, approval/rejection rules and
+new test cases.
+
 ## 2026-11-19: Open session and code rotation
 
 Existing method signatures remain unchanged:

@@ -11,6 +11,7 @@ public:
     static AuthService& instance();
 
     bool login(const QString& email, const QString& password);
+    bool changePassword(const QString& currentPassword, const QString& newPassword);
 
     void logout();
 

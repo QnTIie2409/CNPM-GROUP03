@@ -140,3 +140,15 @@ bool UserRepository::setActiveStatus(int userId, bool isActive) {
     query.bindValue(":id", userId);
     return query.exec();
 }
+
+bool UserRepository::updatePasswordHash(int userId, const QString &passwordHash) {
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+    query.prepare("UPDATE users SET password_hash = :password_hash WHERE user_id = :id AND is_active = TRUE");
+    query.bindValue(":password_hash", passwordHash);
+    query.bindValue(":id", userId);
+    if (!query.exec()) {
+        Logger::logError("UserRepository::updatePasswordHash failed: " + query.lastError().text());
+        return false;
+    }
+    return query.numRowsAffected() == 1;
+}

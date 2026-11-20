@@ -33,6 +33,7 @@
 #include <QTextEdit>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QDialogButtonBox>
 #include <QFileInfo>
 #include <functional>
 
@@ -159,8 +160,8 @@ void showExcuseRequestDialog(QWidget *parent, const QString &courseTitle, const 
     btnCancel->setObjectName("btnOutline");
     btnCancel->setCursor(Qt::PointingHandCursor);
 
-    auto *btnSubmit = new QPushButton("Gửi đơn xin phép");
-    btnSubmit->setStyleSheet("QPushButton { background-color: #1B4F96; color: #FFFFFF; font-weight: bold; border-radius: 6px; padding: 8px 18px; border: none; } QPushButton:hover { background-color: #163F7A; }");
+    auto *btnSubmit = new QPushButton("Đóng");
+    btnSubmit->setObjectName("btnOutline");
     btnSubmit->setCursor(Qt::PointingHandCursor);
 
     btnRow->addWidget(btnCancel);
@@ -168,15 +169,65 @@ void showExcuseRequestDialog(QWidget *parent, const QString &courseTitle, const 
     lay->addLayout(btnRow);
 
     QObject::connect(btnCancel, &QPushButton::clicked, dialog, &QDialog::reject);
-    QObject::connect(btnSubmit, &QPushButton::clicked, dialog, [dialog, editReason] {
-        if (editReason->toPlainText().trimmed().isEmpty()) {
-            QMessageBox::warning(dialog, "Thiếu thông tin", "Vui lòng nhập lý do vắng học trước khi gửi đơn.");
+    auto *notice = new QLabel("Tính năng gửi đơn xin phép chưa nằm trong phạm vi FR hiện tại. Lecturer có thể cập nhật trạng thái Excused trực tiếp trong Attendance Report.");
+    notice->setWordWrap(true);
+    notice->setStyleSheet("color: #B45309; background: #FEF3C7; padding: 8px; border-radius: 6px;");
+    lay->insertWidget(lay->count() - 1, notice);
+    editReason->setReadOnly(true);
+    btnChoose->setEnabled(false);
+    QObject::connect(btnSubmit, &QPushButton::clicked, dialog, &QDialog::accept);
+
+    dialog->exec();
+}
+
+void showChangePasswordDialog(QWidget *parent) {
+    auto *dialog = new QDialog(parent);
+    dialog->setWindowTitle("Change password");
+    dialog->setModal(true);
+    dialog->setFixedWidth(420);
+    dialog->setStyleSheet("QDialog { background: #FFFFFF; } QLabel { color: #112D55; } QLineEdit { color: #112D55; background: #FFFFFF; }");
+
+    auto *layout = new QVBoxLayout(dialog);
+    layout->setContentsMargins(24, 22, 24, 22);
+    layout->setSpacing(10);
+    auto *title = new QLabel("Change your password");
+    title->setStyleSheet("font-size: 18px; font-weight: 700; color: #112D55;");
+    layout->addWidget(title);
+    layout->addWidget(new QLabel("Enter your current password and choose a new password."));
+
+    auto *current = new QLineEdit;
+    current->setEchoMode(QLineEdit::Password);
+    current->setPlaceholderText("Current password");
+    auto *next = new QLineEdit;
+    next->setEchoMode(QLineEdit::Password);
+    next->setPlaceholderText("New password (at least 6 characters)");
+    auto *confirm = new QLineEdit;
+    confirm->setEchoMode(QLineEdit::Password);
+    confirm->setPlaceholderText("Confirm new password");
+    layout->addWidget(current);
+    layout->addWidget(next);
+    layout->addWidget(confirm);
+
+    auto *error = new QLabel;
+    error->setWordWrap(true);
+    error->setStyleSheet("color: #B91C1C;");
+    layout->addWidget(error);
+
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Save);
+    layout->addWidget(buttons);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
+    QObject::connect(buttons, &QDialogButtonBox::accepted, dialog, [=] {
+        if (next->text() != confirm->text()) {
+            error->setText("The new passwords do not match.");
             return;
         }
-        QMessageBox::information(dialog, "Đã gửi đơn", "Đơn xin phép vắng học của bạn đã được gửi thành công đến giảng viên phụ trách môn học để duyệt.");
-        dialog->accept();
+        if (AuthService::instance().changePassword(current->text(), next->text())) {
+            QMessageBox::information(dialog, "Password updated", "Your password has been updated successfully.");
+            dialog->accept();
+        } else {
+            error->setText(AuthService::instance().lastError());
+        }
     });
-
     dialog->exec();
 }
 
@@ -3381,6 +3432,10 @@ void UiLauncher::openShellFor(const QString &) {
         AuthService::instance().logout();
         if (m_shell) m_shell->close();
         if (m_login) m_login->show();
+    });
+    connect(m_shell, &AppShell::changePasswordRequested, this, [this] {
+        if (m_shell)
+            showChangePasswordDialog(m_shell);
     });
 
     m_shell->resize(1440, 900);

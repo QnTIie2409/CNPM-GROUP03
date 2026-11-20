@@ -126,6 +126,37 @@ bool AuthService::login(const QString& email, const QString& password) {
     return true;
 }
 
+bool AuthService::changePassword(const QString &currentPassword, const QString &newPassword) {
+    m_lastError.clear();
+    if (!m_currentUser.has_value()) {
+        m_lastError = QStringLiteral("You must be logged in to change your password.");
+        return false;
+    }
+    if (currentPassword.isEmpty() || newPassword.isEmpty()) {
+        m_lastError = QStringLiteral("Please enter both your current and new password.");
+        return false;
+    }
+    if (newPassword.size() < 6) {
+        m_lastError = QStringLiteral("The new password must contain at least 6 characters.");
+        return false;
+    }
+    if (currentPassword == newPassword) {
+        m_lastError = QStringLiteral("The new password must be different from the current password.");
+        return false;
+    }
+    if (!verifyPassword(currentPassword, m_currentUser->passwordHash)) {
+        m_lastError = QStringLiteral("The current password is incorrect.");
+        return false;
+    }
+    const QString newHash = hashPassword(newPassword);
+    if (!m_userRepo.updatePasswordHash(m_currentUser->userId, newHash)) {
+        m_lastError = QStringLiteral("The password could not be updated. Please try again.");
+        return false;
+    }
+    m_currentUser->passwordHash = newHash;
+    return true;
+}
+
 void AuthService::logout() {
     m_currentUser.reset();
 }

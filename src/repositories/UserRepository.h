@@ -14,6 +14,7 @@ public:
     bool createUser(const User& user);
     bool updateUser(const User& user);
     bool setActiveStatus(int userId, bool isActive);
+    bool updatePasswordHash(int userId, const QString &passwordHash);
 };
 
 #endif
