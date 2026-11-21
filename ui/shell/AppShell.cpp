@@ -141,6 +141,12 @@ QWidget *AppShell::buildTopBar(Role role, const QString &userName) {
     btnPw->setCursor(Qt::PointingHandCursor);
     links->addWidget(btnPw);
 
+    auto *btnReload = new QPushButton("Reload");
+    btnReload->setObjectName("linkPrimary");
+    btnReload->setFlat(true);
+    btnReload->setCursor(Qt::PointingHandCursor);
+    links->addWidget(btnReload);
+
     auto *btnOut = new QPushButton("Sign out");
     btnOut->setObjectName("btnTopSignOut");
     btnOut->setCursor(Qt::PointingHandCursor);
@@ -156,6 +162,7 @@ QWidget *AppShell::buildTopBar(Role role, const QString &userName) {
     lay->addWidget(avatar);
 
     connect(btnPw, &QPushButton::clicked, this, &AppShell::changePasswordRequested);
+    connect(btnReload, &QPushButton::clicked, this, &AppShell::reloadRequested);
     connect(btnOut, &QPushButton::clicked, this, &AppShell::signOutRequested);
     return bar;
 }
@@ -217,4 +224,9 @@ void AppShell::setCurrentPage(const QString &navText) {
     if (idx != -1) {
         setCurrentPage(idx);
     }
+}
+
+QString AppShell::currentPage() const {
+    const int index = m_stack ? m_stack->currentIndex() : -1;
+    return m_titles.value(index);
 }

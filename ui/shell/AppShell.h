@@ -18,11 +18,13 @@ public:
     void addPage(const QString &navText, QWidget *page);
     void setCurrentPage(const QString &navText);
     void setCurrentPage(int index);
+    QString currentPage() const;
 
 signals:
     void signOutRequested();
     void changePasswordRequested();
     void pageChanged(const QString &pageName);
+    void reloadRequested();
 
 private:
     QWidget *buildSidebar(Role role);

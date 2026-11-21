@@ -1002,6 +1002,7 @@ QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)>
     auto activeCourseName = std::make_shared<QString>();
 
     auto lblCodeNumberPtr = std::make_shared<QLabel*>(nullptr);
+    auto lblCountdownPtr = std::make_shared<QLabel*>(nullptr);
     auto lblBadgeLivePtr = std::make_shared<QLabel*>(nullptr);
     auto btnCloseSessionPtr = std::make_shared<QPushButton*>(nullptr);
     auto cardPresentValPtr = std::make_shared<QLabel*>(nullptr);
@@ -1209,6 +1210,13 @@ QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)>
         codeBoxLay->addWidget(codeNumber);
         *lblCodeNumberPtr = codeNumber;
 
+        auto *countdown = new QLabel;
+        countdown->setObjectName("sessionCountdown");
+        countdown->setAlignment(Qt::AlignCenter);
+        countdown->setStyleSheet("color: #B45309; font-size: 15px; font-weight: 700; background: transparent;");
+        codeBoxLay->addWidget(countdown);
+        *lblCountdownPtr = countdown;
+
         auto *codeHint = new QLabel(activeSession->status == SessionStatus::OPEN
             ? "🔄 Mã 6 số tự động cập nhật sau mỗi 60 giây. Sinh viên dùng mã này để xác nhận điểm danh."
             : "⚠️ Phiên điểm danh này đã kết thúc.");
@@ -1387,6 +1395,16 @@ QWidget *lecturerLiveSessionPage(int userId, std::function<void(const QString&)>
     auto *livePollTimer = new QTimer(page);
     livePollTimer->setInterval(1500);
     QObject::connect(livePollTimer, &QTimer::timeout, page, [=, renderView, refreshLiveTable]() {
+        if (*lblCountdownPtr && *currentSessionId > 0) {
+            const auto live = SessionService::instance().getSessionById(*currentSessionId);
+            if (live.has_value() && live->status == SessionStatus::OPEN) {
+                const qint64 elapsed = SessionRepository{}.serverSecondsSince(live->startTime);
+                const qint64 remaining = qMax<qint64>(0, static_cast<qint64>(live->durationMinutes) * 60 - elapsed);
+                (*lblCountdownPtr)->setText(QString("Còn lại: %1:%2")
+                    .arg(remaining / 60, 2, 10, QLatin1Char('0'))
+                    .arg(remaining % 60, 2, 10, QLatin1Char('0')));
+            }
+        }
         if (!page->isVisible()) return;
 
         if (*currentSessionId > 0) {
@@ -2818,6 +2836,21 @@ QWidget *studentOverviewPage(int userId, std::function<void(const QString&)> nav
             info->setStyleSheet("color: #64748B; font-size: 12px; background: transparent; border: none;");
             sLayout->addWidget(info);
 
+            auto *countdown = new QLabel;
+            countdown->setStyleSheet("color: #B45309; font-size: 15px; font-weight: 700; background: transparent;");
+            sLayout->addWidget(countdown);
+            auto *countdownTimer = new QTimer(sessionBox);
+            countdownTimer->setInterval(1000);
+            QObject::connect(countdownTimer, &QTimer::timeout, sessionBox,
+                [countdown, start = open->startTime, duration = open->durationMinutes] {
+                    const qint64 elapsed = SessionRepository{}.serverSecondsSince(start);
+                    const qint64 remaining = qMax<qint64>(0, static_cast<qint64>(duration) * 60 - elapsed);
+                    countdown->setText(QString("Th?i gian c?n l?i: %1:%2")
+                        .arg(remaining / 60, 2, 10, QLatin1Char('0'))
+                        .arg(remaining % 60, 2, 10, QLatin1Char('0')));
+                });
+            countdownTimer->start();
+
             auto *row = new QHBoxLayout;
             auto *code = new QLineEdit;
             code->setPlaceholderText("Nhập mã 6 chữ số");
@@ -3398,6 +3431,12 @@ void UiLauncher::openShellFor(const QString &) {
     connect(m_shell, &AppShell::changePasswordRequested, this, [this] {
         if (m_shell)
             showChangePasswordDialog(m_shell);
+    });
+    connect(m_shell, &AppShell::reloadRequested, this, [this] {
+        const QString page = m_shell ? m_shell->currentPage() : QString();
+        openShellFor(QString());
+        if (m_shell && !page.isEmpty())
+            m_shell->setCurrentPage(page);
     });
 
     m_shell->resize(1440, 900);
