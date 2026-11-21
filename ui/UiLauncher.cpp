@@ -6,6 +6,7 @@
 #include "../src/services/AuthService.h"
 #include "../src/repositories/CourseRepository.h"
 #include "../src/repositories/SessionRepository.h"
+#include "../src/repositories/ScheduleRepository.h"
 #include "../src/repositories/UserRepository.h"
 #include "../src/services/AccountService.h"
 #include "../src/services/CourseService.h"
@@ -24,6 +25,7 @@
 #include <QHeaderView>
 #include <QDateEdit>
 #include <QTimeEdit>
+#include <QSet>
 #include <QCalendarWidget>
 #include <QApplication>
 #include <QFile>
@@ -102,82 +104,6 @@ QWidget *createStatusBadgeWidget(AttendanceStatus status) {
     }
     lay->addWidget(badge);
     return container;
-}
-
-void showExcuseRequestDialog(QWidget *parent, const QString &courseTitle, const QString &sessionDate) {
-    auto *dialog = new QDialog(parent);
-    dialog->setWindowTitle("Gửi đơn xin phép vắng học (Excuse Request)");
-    dialog->setFixedWidth(480);
-    dialog->setStyleSheet("QDialog { background-color: #FFFFFF; color: #1E293B; }");
-
-    auto *lay = new QVBoxLayout(dialog);
-    lay->setContentsMargins(24, 22, 24, 22);
-    lay->setSpacing(14);
-
-    auto *lblTitle = new QLabel("📝 Đơn xin phép vắng học");
-    lblTitle->setStyleSheet("font-size: 17px; font-weight: 700; color: #112D55;");
-    lay->addWidget(lblTitle);
-
-    auto *lblInfo = new QLabel(QString("Môn học: <b>%1</b><br>Buổi học: %2").arg(courseTitle, sessionDate));
-    lblInfo->setStyleSheet("color: #475569; font-size: 13px; line-height: 1.4;");
-    lay->addWidget(lblInfo);
-
-    auto *lblReason = new QLabel("Lý do vắng học *:");
-    lblReason->setStyleSheet("font-weight: 600; color: #1E293B; font-size: 13px;");
-    lay->addWidget(lblReason);
-
-    auto *editReason = new QTextEdit;
-    editReason->setPlaceholderText("Vui lòng ghi rõ lý do (ví dụ: bị ốm, có giấy khám bệnh, việc gia đình cấp bách)...");
-    editReason->setStyleSheet("QTextEdit { background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px; font-size: 13px; color: #0F172A; } QTextEdit:focus { border: 1px solid #1B4F96; }");
-    editReason->setFixedHeight(90);
-    lay->addWidget(editReason);
-
-    auto *lblProof = new QLabel("Minh chứng kèm theo (giấy tờ y tế / xác nhận):");
-    lblProof->setStyleSheet("font-weight: 600; color: #1E293B; font-size: 13px;");
-    lay->addWidget(lblProof);
-
-    auto *fileRow = new QHBoxLayout;
-    auto *lblFileName = new QLabel("Chưa chọn tệp");
-    lblFileName->setStyleSheet("color: #64748B; font-style: italic; font-size: 12px;");
-    auto *btnChoose = new QPushButton("Chọn tệp...");
-    btnChoose->setObjectName("btnOutline");
-    btnChoose->setCursor(Qt::PointingHandCursor);
-    fileRow->addWidget(btnChoose);
-    fileRow->addWidget(lblFileName, 1);
-    lay->addLayout(fileRow);
-
-    QObject::connect(btnChoose, &QPushButton::clicked, dialog, [dialog, lblFileName] {
-        const QString path = QFileDialog::getOpenFileName(dialog, "Chọn tệp minh chứng", "", "Tài liệu (*.pdf *.png *.jpg *.jpeg)");
-        if (!path.isEmpty()) {
-            lblFileName->setText(QFileInfo(path).fileName());
-            lblFileName->setStyleSheet("color: #15803D; font-weight: 600; font-size: 12px;");
-        }
-    });
-
-    auto *btnRow = new QHBoxLayout;
-    btnRow->addStretch();
-    auto *btnCancel = new QPushButton("Hủy");
-    btnCancel->setObjectName("btnOutline");
-    btnCancel->setCursor(Qt::PointingHandCursor);
-
-    auto *btnSubmit = new QPushButton("Đóng");
-    btnSubmit->setObjectName("btnOutline");
-    btnSubmit->setCursor(Qt::PointingHandCursor);
-
-    btnRow->addWidget(btnCancel);
-    btnRow->addWidget(btnSubmit);
-    lay->addLayout(btnRow);
-
-    QObject::connect(btnCancel, &QPushButton::clicked, dialog, &QDialog::reject);
-    auto *notice = new QLabel("Tính năng gửi đơn xin phép chưa nằm trong phạm vi FR hiện tại. Lecturer có thể cập nhật trạng thái Excused trực tiếp trong Attendance Report.");
-    notice->setWordWrap(true);
-    notice->setStyleSheet("color: #B45309; background: #FEF3C7; padding: 8px; border-radius: 6px;");
-    lay->insertWidget(lay->count() - 1, notice);
-    editReason->setReadOnly(true);
-    btnChoose->setEnabled(false);
-    QObject::connect(btnSubmit, &QPushButton::clicked, dialog, &QDialog::accept);
-
-    dialog->exec();
 }
 
 void showChangePasswordDialog(QWidget *parent) {
@@ -755,15 +681,44 @@ QWidget *lecturerOpenSessionPage(int userId, std::function<void(const QString&)>
     cardLayout->setSpacing(16);
 
     // Row 1: Course Selection
-    auto *courseLabel = new QLabel("Lớp học phần (Course)");
+    auto *courseLabel = new QLabel("Ca học đang chọn (môn · ca · phòng)");
     courseLabel->setStyleSheet("font-weight: 700; color: #112D55; font-size: 13px;");
     cardLayout->addWidget(courseLabel);
 
     auto *courseBox = new QComboBox;
     courseBox->setFixedHeight(38);
+    ScheduleRepository scheduleRepository;
+    int currentScheduleIndex = -1;
+    const QDate currentDate = QDate::currentDate();
+    const QTime currentTime = QTime::currentTime();
+    const QStringList dayNames = {"", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
     for (const auto &course : taught) {
-        courseBox->addItem(QString("%1 - %2").arg(course.code, course.name), course.courseId);
+        const auto entries = scheduleRepository.findByCourse(course.courseId);
+        for (const auto &entry : entries) {
+            if (currentDate < entry.startDate || currentDate > entry.endDate)
+                continue;
+            const bool current = entry.dayOfWeek == currentDate.dayOfWeek()
+                && currentTime >= entry.startTime && currentTime <= entry.endTime;
+            const QString currentTag = current ? "[ĐANG DIỄN RA] " : "";
+            const QString label = QString("%1%2 - %3 | %4 | %5-%6 | Phòng %7")
+                .arg(currentTag)
+                .arg(course.code)
+                .arg(course.name)
+                .arg(dayNames.value(entry.dayOfWeek, "Ngày học"))
+                .arg(entry.startTime.toString("HH:mm"))
+                .arg(entry.endTime.toString("HH:mm"))
+                .arg(cleanRoomName(entry.room));
+            courseBox->addItem(label, course.courseId);
+            if (current && currentScheduleIndex < 0)
+                currentScheduleIndex = courseBox->count() - 1;
+        }
     }
+    if (courseBox->count() == 0) {
+        for (const auto &course : taught)
+            courseBox->addItem(QString("%1 - %2 (chưa có ca trong ngày hiện tại)").arg(course.code, course.name), course.courseId);
+    }
+    if (currentScheduleIndex >= 0)
+        courseBox->setCurrentIndex(currentScheduleIndex);
     cardLayout->addWidget(courseBox);
 
     // Active session alert box if already open
@@ -2762,13 +2717,11 @@ QWidget *studentOverviewPage(int userId, std::function<void(const QString&)> nav
     int totalCompleted = 0;
     int totalCredited = 0;
     int totalAbsences = 0;
-    int totalExcused = 0;
     for (const auto &c : enrolled) {
         const auto st = AttendanceService::instance().getStudentStats(userId, c.courseId);
         totalCompleted += st.totalCompletedSessions;
         totalCredited += (st.presentCount + st.lateCount + st.excusedCount);
         totalAbsences += st.absentCount;
-        totalExcused += st.excusedCount;
     }
     const double overallRate = totalCompleted > 0 ? ((double)totalCredited / totalCompleted) * 100.0 : 100.0;
 
@@ -2790,11 +2743,6 @@ QWidget *studentOverviewPage(int userId, std::function<void(const QString&)> nav
         "Trên các buổi đã hoàn thành",
         totalAbsences > 0 ? "#B91C1C" : "#112D55"));
 
-    kpiRow->addWidget(createKpiCard(
-        "Đơn xin phép (Excuse requests)",
-        QString("%1 đã duyệt").arg(totalExcused),
-        "Hồ sơ chuyên cần đã cập nhật"));
-
     pageLayout->addLayout(kpiRow);
 
     // 3. Main Content: 2 Columns
@@ -2808,6 +2756,35 @@ QWidget *studentOverviewPage(int userId, std::function<void(const QString&)> nav
 
     const auto studentEntries = TimetableService::instance().getStudentTimetable(userId);
     const QDate today = QDate::currentDate();
+
+    // SessionOpened is process-local. Poll MySQL so a Student sees a session
+    // opened by the Lecturer in another app instance or on another computer.
+    auto *sessionPollTimer = new QTimer(page);
+    sessionPollTimer->setInterval(2000);
+    auto knownOpenSessionIds = std::make_shared<QSet<int>>();
+    SessionRepository initialSessionRepository;
+    for (const auto &course : enrolled) {
+        const auto open = initialSessionRepository.findOpenSessionForCourse(course.courseId);
+        if (open.has_value()) knownOpenSessionIds->insert(open->sessionId);
+    }
+    QObject::connect(sessionPollTimer, &QTimer::timeout, page,
+        [page, enrolled, knownOpenSessionIds] {
+            SessionRepository repository;
+            for (const auto &course : enrolled) {
+                const auto open = repository.findOpenSessionForCourse(course.courseId);
+                if (!open.has_value() || knownOpenSessionIds->contains(open->sessionId))
+                    continue;
+                knownOpenSessionIds->insert(open->sessionId);
+                QMessageBox::information(
+                    page,
+                    "Phiên điểm danh mới",
+                    QString("Môn %1 - %2 vừa mở phiên điểm danh #%3.\n\n"
+                            "Hãy nhập mã hiện tại trên màn hình này để điểm danh.")
+                        .arg(course.code, course.name)
+                        .arg(open->sessionId));
+            }
+        });
+    sessionPollTimer->start();
 
     // Active Check-In sessions
     SessionRepository sessions;
@@ -3303,21 +3280,6 @@ QWidget *studentAttendancePage(int userId) {
                 lApp->setAlignment(Qt::AlignCenter);
                 lApp->addWidget(badgeApp);
                 table->setCellWidget(rowIdx, 3, wApp);
-            } else if (r.status == AttendanceStatus::ABSENT) {
-                auto *btnExcuse = new QPushButton("Gửi đơn");
-                btnExcuse->setObjectName("btnOutline");
-                btnExcuse->setCursor(Qt::PointingHandCursor);
-                btnExcuse->setStyleSheet("padding: 2px 10px; font-size: 11px;");
-                auto *wBtn = new QWidget;
-                auto *lBtn = new QHBoxLayout(wBtn);
-                lBtn->setContentsMargins(0, 0, 0, 0);
-                lBtn->setAlignment(Qt::AlignCenter);
-                lBtn->addWidget(btnExcuse);
-                table->setCellWidget(rowIdx, 3, wBtn);
-
-                QObject::connect(btnExcuse, &QPushButton::clicked, page, [page, currentCourse, dateStr] {
-                    showExcuseRequestDialog(page, QString("%1 - %2").arg(currentCourse.code, currentCourse.name), dateStr);
-                });
             } else {
                 auto *itemDash = new QTableWidgetItem("—");
                 itemDash->setTextAlignment(Qt::AlignCenter);
